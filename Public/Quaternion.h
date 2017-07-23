@@ -36,7 +36,8 @@ struct Quaternion : private NFloat<4>
 
 	Quaternion& operator=(const Quaternion& rhs)
 	{
-		TFloat::operator=(rhs); return *this;
+		TFloat::operator=(rhs);
+		return *this;
 	}
 
 	static Quaternion fromAxisAndAngle(const Vector3& axis, float angle)
@@ -44,7 +45,6 @@ struct Quaternion : private NFloat<4>
 		const float halfHangle = angle * 0.5f;
 		const float sinHalfAngle = std::sin(halfHangle);
 		const float cosHalfAngle = std::cos(halfHangle);
-
 		return Quaternion(axis.asNFloat() * sinHalfAngle, cosHalfAngle);
 	}
 
