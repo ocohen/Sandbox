@@ -15,7 +15,7 @@ struct Quaternion : private NFloat<4>
 	}
 
 	Quaternion(float inX, float inY, float inZ, float inW)
-	: TFloat({inX, inY, inZ, inW})
+	: TFloat {inX, inY, inZ, inW}
 	{
 	}
 
