@@ -26,11 +26,12 @@ TEST_CASE("Vector operations", "[math]")
 	REQUIRE(Vector3::isNearlyEqual(b/10.f, Vector3(.1f, .2f, .3f)));
 
 	Vector3 c(10.f, 20.f, 30.f);
+	Vector3 d = a+b;
 
 	REQUIRE(Vector3::isNearlyEqual(b+c, Vector3(11.f, 22.f, 33.f)));
 	REQUIRE(Vector3::isNearlyEqual(b-c, Vector3(-9.f, -18.f, -27.f)));
-	REQUIRE(Vector3::isNearlyEqual(b*c, Vector3(10.f, 40.f, 90.f)));
-	REQUIRE(Vector3::isNearlyEqual(b/c, Vector3(.1f, .1f, .1f)));
+	REQUIRE(NFloat<3>::isNearlyEqual(b.toNFloat()*c.toNFloat(), NFloat<3>(10.f, 40.f, 90.f)));
+	REQUIRE(NFloat<3>::isNearlyEqual(b.toNFloat()/c.toNFloat(), NFloat<3>(.1f, .1f, .1f)));
 
 	REQUIRE(isNearlyEqual(b.dotProduct(c), 10+40+90));
 	REQUIRE(isNearlyEqual(b.length(), sqrt(1.f+4.f+9.f)));

@@ -1,18 +1,18 @@
-#ifndef OC_VECTOR
-#define OC_VECTOR
+#ifndef OC_NFLOAT
+#define OC_NFLOAT
 
 #include "OCMath.h"
 #include <functional>
 
 template <int N>
-struct Vector
+struct NFloat
 {
-	typedef Vector<N> TVector;
+	typedef NFloat<N> TVector;
 	float data[N];
 
-	Vector(){}
+	NFloat(){}
 
-	Vector(float k)
+	explicit NFloat(float k)
 	{
 		for(int i=0; i<N; ++i)
 		{
@@ -21,12 +21,12 @@ struct Vector
 	}
 
 	template <typename... T>
-	Vector(T... inData)
+	NFloat(T... inData)
 	: data {inData...}
 	{
 	}
 
-	Vector(const TVector& other)
+	NFloat(const TVector& other)
 	{
 		for(int i=0; i<N; ++i)
 		{
@@ -38,7 +38,7 @@ struct Vector
 	{
 		for (int i = 0; i < N; ++i)
 		{
-			data[i] = other[i];
+			data[i] = rhs[i];
 		}
 		return *this;
 	}
@@ -78,7 +78,7 @@ struct Vector
 	{
 		for(int i=0; i<N; ++i)
 		{
-			func(data[i], rhs[i]);
+			func(lhs[i], rhs[i]);
 		}
 		return lhs;
 	}
@@ -99,7 +99,7 @@ struct Vector
 	{
 		for(int i=0; i<N; ++i)
 		{
-			func(data[i], k);
+			func(lhs[i], k);
 		}
 		return lhs;
 	}
