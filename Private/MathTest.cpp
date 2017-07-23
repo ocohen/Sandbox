@@ -4,17 +4,18 @@
 #include "OCMath.h"
 #include "Vector3.h"
 #include "Vector4.h"
+#include "Quaternion.h"
 
 TEST_CASE("General Math", "[math]")
 {
 	REQUIRE(isNearlyEqual(1.f, 1.f) == true);
-	REQUIRE(isNearlyEqual(1.f, 1.f + 1e-8f) == true);
-	REQUIRE(isNearlyEqual(1.f, 1.f + 1e-7f) == false);
-	REQUIRE(isNearlyEqual(1.f, 1.f - 1e-8f) == true);
-	REQUIRE(isNearlyEqual(1.f, 1.f - 1e-7f) == false);
+	REQUIRE(isNearlyEqual(1.f, 1.f + 1e-5f) == true);
+	REQUIRE(isNearlyEqual(1.f, 1.f + 1e-3f) == false);
+	REQUIRE(isNearlyEqual(1.f, 1.f - 1e-5f) == true);
+	REQUIRE(isNearlyEqual(1.f, 1.f - 1e-3f) == false);
 }
 
-TEST_CASE("Vector operations", "[math]")
+TEST_CASE("Vector3", "[math]")
 {
 	Vector3 a(1.f);
 	REQUIRE((a.x == 1.f && a.y == 1.f && a.z == 1.f));
@@ -42,7 +43,32 @@ TEST_CASE("Vector operations", "[math]")
 	Vector3 y(0,1,0);
 	Vector3 z = Vector3::crossProduct(x,y);
 	REQUIRE(Vector3::isNearlyEqual(z, Vector3(0,0,1)));
+}
 
-	Vector4 w(1,2,3,4);
-	REQUIRE((w.x == 1, w.y == 2, y.z == 3, w.w == 4));
+TEST_CASE("Vector4", "[math]")
+{
+	Vector4 u(1, 2, 3, 0);
+	Vector4 v(0,0,0,1);
+	REQUIRE(Vector4::dotProduct(u,v) == 0.f);
+}
+
+TEST_CASE("Quaternion", "[math]")
+{
+	Quaternion r(Vector3(0.f, 0.f, 1.f), PI_OVER_TWO);
+
+	float angle;
+	Vector3 axis;
+	r.toAxisAngle(axis, angle);
+	REQUIRE(angle == PI_OVER_TWO);
+	REQUIRE(Vector3::isNearlyEqual(axis, Vector3(0.f, 0.f, 1.f)));
+
+	Vector3 v(0.f, 0.f, 10.f);
+	Vector3 vRotated = r * v;
+	REQUIRE(Vector3::isNearlyEqual(v, vRotated));
+	Vector3 uRotated = r * Vector3(1.f, 1.f, 0.f);
+	REQUIRE(Vector3::isNearlyEqual(Vector3(-1.f, 1.f, 0.f), uRotated));
+	REQUIRE(Vector3::isNearlyEqual(Vector3(1.f, 1.f, 0.f), r.getInverse() * uRotated));
+	REQUIRE(Vector3::isNearlyEqual(r * r.getInverse() * v,v));
+	REQUIRE(Vector3::isNearlyEqual(r * r * Vector3(1.f, 1.f, 0.f), Vector3(-1.f, -1.f, 0.f)));
+	REQUIRE(Vector3::isNearlyEqual(Quaternion(Vector3(1.f, 0.f, 0.f), PI) * r * r * Vector3(1.f, 1.f, 0.f), Vector3(-1.f, 1.f, 0.f)));
 }

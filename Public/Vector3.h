@@ -33,6 +33,8 @@ struct Vector3 : private NFloat<3>
 		return NFloat<3>(x,y,z);
 	}
 
+	Vector3& operator=(const Vector3& rhs){ NFloat<3>::operator=(rhs); return *this; }
+
 	static Vector3 crossProduct(const Vector3& a, const Vector3& b)
 	{
 		return Vector3((a.y*b.z - a.z*b.y), -(a.x*b.z - a.z*b.x), (a.x*b.y - a.y*b.x));

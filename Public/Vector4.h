@@ -29,6 +29,8 @@ struct Vector4 : public NFloat<4>
 	{
 	}
 
+	Vector4& operator=(const Vector4& rhs){ NFloat<4>::operator=(rhs); return *this; }
+
 	NFloat<4> toNFloat() const
 	{
 		return NFloat<4>(x, y, z, w);

@@ -43,18 +43,18 @@ struct NFloat
 		return *this;
 	}
 
-	static bool isNearlyEqual(const TVector& a, const TVector& b, float tolerance = OC_EPSILON)
+	static bool isNearlyEqual(const TVector& a, const TVector& b, float tolerance = OC_BIG_EPSILON)
 	{
 		bool bNearlyEqual = true;
 		for(int i=0; i<N; ++i)
 		{
-			bNearlyEqual &= ::isNearlyEqual(a[i],b[i]);
+			bNearlyEqual &= ::isNearlyEqual(a[i],b[i], tolerance);
 		}
 
 		return bNearlyEqual;
 	}
 
-	bool isNearlyEqual(const TVector& rhs, float tolerance = OC_EPSILON) const
+	bool isNearlyEqual(const TVector& rhs, float tolerance = OC_BIG_EPSILON) const
 	{
 		return isNearlyEqual(*this, rhs, tolerance);
 	}
