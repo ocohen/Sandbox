@@ -1,84 +1,119 @@
 #ifndef OC_QUATERNION
 #define OC_QUATERNION
 
-#include "NFloat.h"
 #include "Vector3.h"
 
 struct Quaternion : private NFloat<4>
 {
-	NFloat<3>& axis = *((NFloat<3>*)(&data[0]));
-	float& w = NFloat<4>::data[3];
+	float& x = data[0];
+	float& y = data[1];
+	float& z = data[2];
+	float& w = data[3];
 
 	Quaternion()
 	{
 	}
 
-	Quaternion(const Vector3& inAxis, float inAngle)
-	{
-		float halfHangle = inAngle * 0.5f;
-		float sinHalfAngle = std::sin(halfHangle);
-		axis = inAxis.toNFloat() * sinHalfAngle;
-		w = std::cos(halfHangle);
-	}
-
-	Quaternion(float x, float y, float z, float inW)
-	{
-		axis[0] = x;
-		axis[1] = y;
-		axis[2] = z;
-		w = inW;
-	}
-
-	explicit Quaternion(const NFloat<4>& rhs)
-		: NFloat<4>(rhs)
+	Quaternion(float inX, float inY, float inZ, float inW)
+	: TFloat({inX, inY, inZ, inW})
 	{
 	}
 
-	Quaternion& operator=(const Quaternion& rhs){ NFloat<4>::operator=(rhs); return *this; }
-
-	NFloat<4> toNFloat() const
+	Quaternion(const NFloat<3>& inImaginary, float inReal)	//NOTE: this is _not_ axis and angle, see fromAxisAndAngle
+		: TFloat {inImaginary[0], inImaginary[1], inImaginary[2], inReal}
 	{
-		return NFloat<4>(axis[0], axis[1], axis[2], w);
+	}
+
+	Quaternion(const Quaternion& other)
+	: TFloat {other[0], other[1], other[2], other[3]}
+	{
+	}
+
+	explicit Quaternion(const TFloat& rhs)
+		: TFloat(rhs)
+	{
+	}
+
+	Quaternion& operator=(const Quaternion& rhs)
+	{
+		TFloat::operator=(rhs); return *this;
+	}
+
+	static Quaternion fromAxisAndAngle(const Vector3& axis, float angle)
+	{
+		const float halfHangle = angle * 0.5f;
+		const float sinHalfAngle = std::sin(halfHangle);
+		const float cosHalfAngle = std::cos(halfHangle);
+
+		return Quaternion(axis.asNFloat() * sinHalfAngle, cosHalfAngle);
+	}
+
+	const TFloat& asNFloat() const
+	{
+		return reinterpret_cast<const TFloat&>(*this);
+	}
+
+	TFloat& asNFloat()
+	{
+		return reinterpret_cast<TFloat&>(*this);
+	}
+
+	const Vector3& imaginary() const
+	{
+		return *reinterpret_cast<const Vector3*>(this);
+	}
+
+	Vector3& imaginary()
+	{
+		return *reinterpret_cast<Vector3*>(this);
 	}
 
 	void toAxisAngle(Vector3& outAxis, float& angle) const
 	{
 		angle = 2.f * std::acos(w);
-		float oneOverDenom = 1.f / std::sqrt(1.f - w*w);
-		outAxis = Vector3(axis) * oneOverDenom;
+		const float denom = 1.f - w*w;
+		if(denom > OC_BIG_EPSILON)
+		{
+			const float oneOverDenom = 1.f / std::sqrt(denom);
+			outAxis = imaginary() * oneOverDenom;
+		}
+		else
+		{
+			outAxis = imaginary();
+		}
 	}
 
-	Vector3 operator*(const Vector3& v) const
+	Vector3 rotateVector(const Vector3& R) const
 	{
 		//http://people.csail.mit.edu/bkph/articles/Quaternions.pdf
-		Vector3 t = Vector3::crossProduct(Vector3(axis), v) * 2.f;
-		return v + (t * w) + Vector3::crossProduct(Vector3(axis), t);
+		const Vector3& Q = imaginary();
+		const float q = w;
+		return  R + 2.f*q*Vector3::crossProduct(Q,R) + Vector3::crossProduct(2.f*Q, Vector3::crossProduct(Q,R));
+	}
+
+	Vector3 operator*(const Vector3& R) const
+	{
+		return rotateVector(R);
 	}
 
 	Quaternion operator*(const Quaternion& rhs) const
 	{
-		const NFloat<4>& a = toNFloat();
-		const NFloat<4>& b = rhs.toNFloat();
-		NFloat<4> result;
-
-		const float tx = a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1];
-		const float ty = a[3] * b[1] - a[0] * b[2] + a[1] * b[3] + a[2] * b[0];
-		const float tz = a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3];
-		const float tw = a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2];
-
-		return Quaternion(tx, ty, tz, tw);
+		//http://people.csail.mit.edu/bkph/articles/Quaternions.pdf
+		const Vector3& P = imaginary();
+		const Vector3& Q = rhs.imaginary();
+		const float p = w;
+		const float q = rhs.w;
+		return Quaternion((p*Q + q*P + Vector3::crossProduct(P,Q)).asNFloat(), p*q - Vector3::dotProduct(P,Q));
 	}
 
 	Quaternion getInverse() const
 	{
-		return Quaternion(-axis[0], -axis[1], -axis[2], w);
+		return Quaternion(-imaginary().asNFloat(), w);
 	}
 
 	Quaternion getNormal() const { return Quaternion(NFloat<4>::getNormal()); }
 	Quaternion& normalize() { NFloat<4>::normalize(); return *this; }
 
-	using NFloat<4>::length;
-	using NFloat<4>::length2;
 	static bool isNearlyEqual(const Quaternion& a, const Quaternion& b) { return NFloat<4>::isNearlyEqual(a, b); }
 };
 

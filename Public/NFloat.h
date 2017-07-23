@@ -1,5 +1,5 @@
-#ifndef OC_NFLOAT
-#define OC_NFLOAT
+#ifndef OC_FLOAT
+#define OC_FLOAT
 
 #include "OCMath.h"
 #include <functional>
@@ -7,7 +7,7 @@
 template <int N>
 struct NFloat
 {
-	typedef NFloat<N> TVector;
+	typedef NFloat<N> TFloat;
 	float data[N];
 
 	NFloat(){}
@@ -20,13 +20,7 @@ struct NFloat
 		}
 	}
 
-	template <typename... T>
-	NFloat(T... inData)
-	: data {inData...}
-	{
-	}
-
-	NFloat(const TVector& other)
+	NFloat(const TFloat& other)
 	{
 		for(int i=0; i<N; ++i)
 		{
@@ -34,7 +28,13 @@ struct NFloat
 		}
 	}
 
-	TVector& operator=(const TVector& rhs)
+	template<typename... T>
+	NFloat(T... inData)
+	: data {inData...}
+	{
+	}
+
+	TFloat& operator=(const TFloat& rhs)
 	{
 		for (int i = 0; i < N; ++i)
 		{
@@ -43,7 +43,7 @@ struct NFloat
 		return *this;
 	}
 
-	static bool isNearlyEqual(const TVector& a, const TVector& b, float tolerance = OC_BIG_EPSILON)
+	static bool isNearlyEqual(const TFloat& a, const TFloat& b, float tolerance = OC_BIG_EPSILON)
 	{
 		bool bNearlyEqual = true;
 		for(int i=0; i<N; ++i)
@@ -54,7 +54,7 @@ struct NFloat
 		return bNearlyEqual;
 	}
 
-	bool isNearlyEqual(const TVector& rhs, float tolerance = OC_BIG_EPSILON) const
+	bool isNearlyEqual(const TFloat& rhs, float tolerance = OC_BIG_EPSILON) const
 	{
 		return isNearlyEqual(*this, rhs, tolerance);
 	}
@@ -63,9 +63,9 @@ struct NFloat
 	float& operator[](int index) { return data[index]; }
 
 	template <typename Lambda>
-	static TVector pairwise(const TVector& lhs, const TVector&rhs, Lambda func)
+	static TFloat pairwise(const TFloat& lhs, const TFloat&rhs, Lambda func)
 	{
-		TVector result;
+		TFloat result;
 		for(int i=0; i<N; ++i)
 		{
 			result[i] = func(lhs[i], rhs[i]);
@@ -74,7 +74,7 @@ struct NFloat
 	}
 
 	template <typename Lambda>
-	static TVector& pairwise(TVector& lhs, const TVector&rhs, Lambda func)
+	static TFloat& pairwise(TFloat& lhs, const TFloat&rhs, Lambda func)
 	{
 		for(int i=0; i<N; ++i)
 		{
@@ -84,9 +84,9 @@ struct NFloat
 	}
 
 	template <typename Lambda>
-	static TVector toMany(const TVector& lhs, float k, Lambda func)
+	static TFloat toMany(const TFloat& lhs, float k, Lambda func)
 	{
-		TVector result;
+		TFloat result;
 		for(int i=0; i<N; ++i)
 		{
 			result[i] = func(lhs[i], k);
@@ -95,7 +95,7 @@ struct NFloat
 	}
 
 	template <typename Lambda>
-	static TVector& toMany(TVector& lhs, float k, Lambda func)
+	static TFloat& toMany(TFloat& lhs, float k, Lambda func)
 	{
 		for(int i=0; i<N; ++i)
 		{
@@ -104,76 +104,86 @@ struct NFloat
 		return lhs;
 	}
 
-	TVector operator+(const TVector& rhs) const
+	TFloat operator+(const TFloat& rhs) const
 	{
 		return pairwise(*this, rhs, std::plus<float>());
 	}
 
-	TVector& operator+=(const TVector& rhs)
+	TFloat& operator+=(const TFloat& rhs)
 	{
 		*this = pairwise(*this, rhs, std::plus<float>());
 		return *this;
 	}
 
-	TVector operator-(const TVector& rhs) const
+	TFloat operator-(const TFloat& rhs) const
 	{
 		return pairwise(*this, rhs, std::minus<float>());
 	}
 
-	TVector& operator-=(const TVector& rhs)
+	TFloat& operator-=(const TFloat& rhs)
 	{
 		*this = pairwise(*this, rhs, std::minus<float>());
 		return *this;
 	}
 
-	TVector operator*(const TVector& rhs) const
+	TFloat operator*(const TFloat& rhs) const
 	{
 		return pairwise(*this, rhs, std::multiplies<float>());
 	}
 
-	TVector& operator*=(const TVector& rhs)
+	TFloat& operator*=(const TFloat& rhs)
 	{
 		*this = pairwise(*this, rhs, std::multiplies<float>());
 		return *this;
 	}
 
-	TVector operator/(const TVector& rhs) const
+	TFloat operator/(const TFloat& rhs) const
 	{
 		return pairwise(*this, rhs, std::divides<float>());
 	}
 
-	TVector& operator/=(const TVector& rhs)
+	TFloat& operator/=(const TFloat& rhs)
 	{
 		*this = pairwise(*this, rhs, std::divides<float>());
 		return *this;
 	}
 
-	TVector operator*(float k) const
+	TFloat operator*(float k) const
 	{
 		return toMany(*this, k, std::multiplies<float>());
 	}
 
-	TVector& operator*=(float k)
+	TFloat& operator*=(float k)
 	{
 		*this = toMany(*this, k, std::multiplies<float>());
 		return *this;
 	}
 
-	TVector operator/(float k) const
+	TFloat operator/(float k) const
 	{
 		return toMany(*this, k, std::divides<float>());
 	}
 
-	TVector& operator/=(float k)
+	TFloat& operator/=(float k)
 	{
 		*this = toMany(*this, k, std::divides<float>());
 		return *this;
 	}
 
-	static float dotProduct(const TVector& a, const TVector& b)
+	TFloat operator-() const
+	{
+		TFloat ret;
+		for(int i = 0; i<N; ++i)
+		{
+			ret[i] = -data[i];
+		}
+		return ret;
+	}
+
+	static float dotProduct(const TFloat& a, const TFloat& b)
 	{
 		float sum = float();
-		TVector total = a * b;
+		TFloat total = a * b;
 		for(int i=0; i<N; ++i)
 		{
 			sum += total[i];
@@ -181,7 +191,7 @@ struct NFloat
 		return sum;
 	}
 
-	float dotProduct(const TVector& rhs) const
+	float dotProduct(const TFloat& rhs) const
 	{
 		return dotProduct(*this, rhs);
 	}
@@ -196,16 +206,22 @@ struct NFloat
 		return std::sqrt(length2());
 	}
 
-	TVector getNormal() const
+	TFloat getNormal() const
 	{
 		return *this / length();
 	}
 
-	TVector& normalize()
+	TFloat& normalize()
 	{
 		*this /= length();
 		return *this;
 	}
 };
+
+template <int N>
+inline NFloat<N> operator*(float lhs, const NFloat<N>& rhs)
+{
+	return rhs * lhs;
+}
 
 #endif

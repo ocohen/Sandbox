@@ -15,6 +15,15 @@ TEST_CASE("General Math", "[math]")
 	REQUIRE(isNearlyEqual(1.f, 1.f - 1e-3f) == false);
 }
 
+TEST_CASE("Float3", "[math]")
+{
+	const NFloat<3> a(1.f, 2.f, 3.f);
+	const NFloat<3> b(10.f, 20.f, 30.f);
+
+	//REQUIRE(NFloat<3>::isNearlyEqual(b.asNFloat() / c.asNFloat(), NFloat<3>(.1f, .1f, .1f)));
+	//REQUIRE(NFloat<3>::isNearlyEqual(b.asNFloat()*c.asNFloat(), NFloat<3>(10.f, 40.f, 90.f)));
+}
+
 TEST_CASE("Vector3", "[math]")
 {
 	Vector3 a(1.f);
@@ -31,10 +40,8 @@ TEST_CASE("Vector3", "[math]")
 
 	REQUIRE(Vector3::isNearlyEqual(b+c, Vector3(11.f, 22.f, 33.f)));
 	REQUIRE(Vector3::isNearlyEqual(b-c, Vector3(-9.f, -18.f, -27.f)));
-	REQUIRE(NFloat<3>::isNearlyEqual(b.toNFloat()*c.toNFloat(), NFloat<3>(10.f, 40.f, 90.f)));
-	REQUIRE(NFloat<3>::isNearlyEqual(b.toNFloat()/c.toNFloat(), NFloat<3>(.1f, .1f, .1f)));
 
-	REQUIRE(isNearlyEqual(b.dotProduct(c), 10+40+90));
+	REQUIRE(isNearlyEqual(Vector3::dotProduct(b,c), 10+40+90));
 	REQUIRE(isNearlyEqual(b.length(), sqrt(1.f+4.f+9.f)));
 	REQUIRE(isNearlyEqual(b.length2(), 1.f+4.f+9.f));
 	REQUIRE(Vector3::isNearlyEqual(b.getNormal(), Vector3(1.f / 3.74165738677f, 2.f / 3.74165738677f, 3.f / 3.74165738677f)));
@@ -43,18 +50,21 @@ TEST_CASE("Vector3", "[math]")
 	Vector3 y(0,1,0);
 	Vector3 z = Vector3::crossProduct(x,y);
 	REQUIRE(Vector3::isNearlyEqual(z, Vector3(0,0,1)));
+
+	Vector3 test;
+	test = x * 3;
 }
 
 TEST_CASE("Vector4", "[math]")
 {
 	Vector4 u(1, 2, 3, 0);
 	Vector4 v(0,0,0,1);
-	REQUIRE(Vector4::dotProduct(u,v) == 0.f);
+	REQUIRE(isNearlyEqual(Vector4::dotProduct(u,v), 0.f));
 }
 
 TEST_CASE("Quaternion", "[math]")
 {
-	Quaternion r(Vector3(0.f, 0.f, 1.f), PI_OVER_TWO);
+	Quaternion r = Quaternion::fromAxisAndAngle(Vector3(0.f, 0.f, 1.f), PI_OVER_TWO);
 
 	float angle;
 	Vector3 axis;
@@ -70,5 +80,14 @@ TEST_CASE("Quaternion", "[math]")
 	REQUIRE(Vector3::isNearlyEqual(Vector3(1.f, 1.f, 0.f), r.getInverse() * uRotated));
 	REQUIRE(Vector3::isNearlyEqual(r * r.getInverse() * v,v));
 	REQUIRE(Vector3::isNearlyEqual(r * r * Vector3(1.f, 1.f, 0.f), Vector3(-1.f, -1.f, 0.f)));
-	REQUIRE(Vector3::isNearlyEqual(Quaternion(Vector3(1.f, 0.f, 0.f), PI) * r * r * Vector3(1.f, 1.f, 0.f), Vector3(-1.f, 1.f, 0.f)));
+
+	//make sure sequence of rotation maintains proper order
+	Quaternion rotateZ = Quaternion::fromAxisAndAngle(Vector3(0.f, 0.f, 1.f), PI_OVER_TWO);
+	Quaternion rotateX = Quaternion::fromAxisAndAngle(Vector3(1.f, 0.f, 0.f), PI);
+	Vector3 diag(1.f, 1.f, 0.f);
+	Vector3 diagRotatedByZ = rotateZ * diag;
+	Vector3 diagRotatedByZThenX = rotateX * diagRotatedByZ;
+	REQUIRE(Vector3::isNearlyEqual(diagRotatedByZThenX, Vector3(-1.f, -1.f, 0.f)));
+	Vector3 diagRotatedByZThenXSequential = rotateX * rotateZ * diag;
+	REQUIRE(Vector3::isNearlyEqual(diagRotatedByZThenX, diagRotatedByZThenX));
 }
