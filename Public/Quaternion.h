@@ -5,11 +5,6 @@
 
 struct Quaternion : private NFloat<4>
 {
-	float& x = data[0];
-	float& y = data[1];
-	float& z = data[2];
-	float& w = data[3];
-
 	Quaternion()
 	{
 	}
@@ -39,6 +34,15 @@ struct Quaternion : private NFloat<4>
 		TFloat::operator=(rhs);
 		return *this;
 	}
+
+	float x() const { return data[0]; }
+	float y() const { return data[1]; }
+	float z() const { return data[2]; }
+	float w() const { return data[3]; }
+	float& x() { return data[0]; }
+	float& y() { return data[1]; }
+	float& z() { return data[2]; }
+	float& w() { return data[3]; }
 
 	static Quaternion fromAxisAndAngle(const Vector3& axis, float angle)
 	{
@@ -70,8 +74,8 @@ struct Quaternion : private NFloat<4>
 
 	void toAxisAngle(Vector3& outAxis, float& angle) const
 	{
-		angle = 2.f * std::acos(w);
-		const float denom = 1.f - w*w;
+		angle = 2.f * std::acos(w());
+		const float denom = 1.f - w()*w();
 		if(denom > OC_BIG_EPSILON)
 		{
 			const float oneOverDenom = 1.f / std::sqrt(denom);
@@ -87,7 +91,7 @@ struct Quaternion : private NFloat<4>
 	{
 		//http://people.csail.mit.edu/bkph/articles/Quaternions.pdf
 		const Vector3& Q = imaginary();
-		const float q = w;
+		const float q = w();
 		return  R + 2.f*q*Vector3::crossProduct(Q,R) + Vector3::crossProduct(2.f*Q, Vector3::crossProduct(Q,R));
 	}
 
@@ -101,14 +105,14 @@ struct Quaternion : private NFloat<4>
 		//http://people.csail.mit.edu/bkph/articles/Quaternions.pdf
 		const Vector3& P = imaginary();
 		const Vector3& Q = rhs.imaginary();
-		const float p = w;
-		const float q = rhs.w;
+		const float p = w();
+		const float q = rhs.w();
 		return Quaternion((p*Q + q*P + Vector3::crossProduct(P,Q)).asNFloat(), p*q - Vector3::dotProduct(P,Q));
 	}
 
 	Quaternion getInverse() const
 	{
-		return Quaternion(-imaginary().asNFloat(), w);
+		return Quaternion(-imaginary().asNFloat(), w());
 	}
 
 	Quaternion getNormal() const { return Quaternion(NFloat<4>::getNormal()); }

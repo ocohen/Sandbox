@@ -14,4 +14,14 @@ inline bool isNearlyEqual(float x, float y, float tolerance = OC_BIG_EPSILON)
 	return (diff >= -tolerance) && (diff <= tolerance);
 }
 
+inline bool isNearlyZero(float x, float tolerance = OC_BIG_EPSILON)
+{
+	return isNearlyEqual(x, 0.f);
+}
+
+inline float anglesToRadians(float angle)
+{
+	return PI * angle / 180.f;
+}
+
 #endif

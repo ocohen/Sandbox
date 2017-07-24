@@ -45,13 +45,13 @@ struct NFloat
 
 	static bool isNearlyEqual(const TFloat& a, const TFloat& b, float tolerance = OC_BIG_EPSILON)
 	{
-		bool bNearlyEqual = true;
+		bool bNearly = true;
 		for(int i=0; i<N; ++i)
 		{
-			bNearlyEqual &= ::isNearlyEqual(a[i],b[i], tolerance);
+			bNearly &= ::isNearlyEqual(a[i],b[i], tolerance);
 		}
 
-		return bNearlyEqual;
+		return bNearly;
 	}
 
 	bool isNearlyEqual(const TFloat& rhs, float tolerance = OC_BIG_EPSILON) const
@@ -74,16 +74,6 @@ struct NFloat
 	}
 
 	template <typename Lambda>
-	static TFloat& pairwise(TFloat& lhs, const TFloat&rhs, Lambda func)
-	{
-		for(int i=0; i<N; ++i)
-		{
-			func(lhs[i], rhs[i]);
-		}
-		return lhs;
-	}
-
-	template <typename Lambda>
 	static TFloat toMany(const TFloat& lhs, float k, Lambda func)
 	{
 		TFloat result;
@@ -92,16 +82,6 @@ struct NFloat
 			result[i] = func(lhs[i], k);
 		}
 		return result;
-	}
-
-	template <typename Lambda>
-	static TFloat& toMany(TFloat& lhs, float k, Lambda func)
-	{
-		for(int i=0; i<N; ++i)
-		{
-			func(lhs[i], k);
-		}
-		return lhs;
 	}
 
 	TFloat operator+(const TFloat& rhs) const
@@ -208,12 +188,12 @@ struct NFloat
 
 	TFloat getNormal() const
 	{
-		return *this / length();
+		return *this * (1.f / length());
 	}
 
 	TFloat& normalize()
 	{
-		*this /= length();
+		*this *= (1.f / length());
 		return *this;
 	}
 };

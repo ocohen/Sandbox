@@ -17,20 +17,22 @@ TEST_CASE("General Math", "[math]")
 
 TEST_CASE("Float3", "[math]")
 {
-	const NFloat<3> a(1.f, 2.f, 3.f);
-	const NFloat<3> b(10.f, 20.f, 30.f);
+	NFloat<3> a(1.f, 2.f, 3.f);
 
-	//REQUIRE(NFloat<3>::isNearlyEqual(b.asNFloat() / c.asNFloat(), NFloat<3>(.1f, .1f, .1f)));
-	//REQUIRE(NFloat<3>::isNearlyEqual(b.asNFloat()*c.asNFloat(), NFloat<3>(10.f, 40.f, 90.f)));
+	a *= 3.f;
+	REQUIRE(isNearlyEqual(a[0], 3.f));
+	REQUIRE(isNearlyEqual(a[1], 6.f));
+	REQUIRE(isNearlyEqual(a[2], 9.f));
+
 }
 
 TEST_CASE("Vector3", "[math]")
 {
 	Vector3 a(1.f);
-	REQUIRE((a.x == 1.f && a.y == 1.f && a.z == 1.f));
+	REQUIRE((a.x() == 1.f && a.y() == 1.f && a.z() == 1.f));
 
 	Vector3 b(1.f, 2.f, 3.f);
-	REQUIRE((b.x == 1.f && b.y == 2.f && b.z == 3.f));
+	REQUIRE((b.x() == 1.f && b.y() == 2.f && b.z() == 3.f));
 	REQUIRE(Vector3::isNearlyEqual(b, Vector3(1.f, 2.f, 3.f)));
 	REQUIRE(Vector3::isNearlyEqual(b*10.f, Vector3(10.f, 20.f, 30.f)));
 	REQUIRE(Vector3::isNearlyEqual(b/10.f, Vector3(.1f, .2f, .3f)));

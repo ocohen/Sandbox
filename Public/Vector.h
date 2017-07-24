@@ -68,6 +68,8 @@ struct Vector : private NFloat<N>
 	using TFloat::length2;
 	static bool isNearlyEqual(const TVector& a, const TVector& b) { return TFloat::isNearlyEqual(a, b); }
 
+	using TFloat::operator[];
+
 	friend struct Vector3;
 	friend struct Vector4;
 	friend struct Quaternion;

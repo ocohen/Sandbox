@@ -5,10 +5,6 @@
 
 struct Vector3 : public Vector<3>
 {
-	float& x = data[0];
-	float& y = data[1];
-	float& z = data[2];
-
 	Vector3()
 	{
 	}
@@ -29,7 +25,7 @@ struct Vector3 : public Vector<3>
 	}
 
 	Vector3(const Vector3& other)
-	: TVector {other.x, other.y, other.z}
+	: TVector {other[0], other[1], other[2]}
 	{
 	}
 
@@ -39,9 +35,16 @@ struct Vector3 : public Vector<3>
 		return *this;
 	}
 
+	float x() const { return data[0]; }
+	float y() const { return data[1]; }
+	float z() const { return data[2]; }
+	float& x() { return data[0]; }
+	float& y() { return data[1]; }
+	float& z() { return data[2]; }
+
 	static Vector3 crossProduct(const Vector3& a, const Vector3& b)
 	{
-		return Vector3((a.y*b.z - a.z*b.y), -(a.x*b.z - a.z*b.x), (a.x*b.y - a.y*b.x));
+		return Vector3((a.y()*b.z() - a.z()*b.y()), -(a.x()*b.z() - a.z()*b.x()), (a.x()*b.y() - a.y()*b.x()));
 	}
 
 	Vector3 operator*(float k) const { return Vector3(TVector::operator*(k)); }

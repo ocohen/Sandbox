@@ -5,11 +5,6 @@
 
 struct Vector4 : public Vector<4>
 {
-	float& x = NFloat<4>::data[0];
-	float& y = NFloat<4>::data[1];
-	float& z = NFloat<4>::data[2];
-	float& w = NFloat<4>::data[3];
-
 	Vector4()
 	{
 	}
@@ -20,7 +15,7 @@ struct Vector4 : public Vector<4>
 	}
 
 	Vector4(const Vector4& other)
-	: TVector {other.x, other.y, other.z, other.w}
+	: TVector {other[0], other[1], other[2], other[3]}
 	{
 	}
 
@@ -39,6 +34,15 @@ struct Vector4 : public Vector<4>
 		TVector::operator=(other);
 		return *this;
 	}
+
+	float x() const { return data[0]; }
+	float y() const { return data[1]; }
+	float z() const { return data[2]; }
+	float w() const { return data[3]; }
+	float& x() { return data[0]; }
+	float& y() { return data[1]; }
+	float& z() { return data[2]; }
+	float& w() { return data[3]; }
 
 	Vector4 operator*(float k) const { return Vector4(TVector::operator*(k)); }
 	Vector4 operator+(const Vector4& rhs) const { return Vector4(TVector::operator+(rhs)); }
