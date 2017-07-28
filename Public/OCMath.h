@@ -1,7 +1,7 @@
 #ifndef OC_MATH
 #define OC_MATH
 
-//#include <cmath>
+#include <cmath>
 
 #define OC_EPSILON 1e-8
 #define OC_BIG_EPSILON 1e-4

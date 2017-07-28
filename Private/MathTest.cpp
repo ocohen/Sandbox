@@ -17,25 +17,22 @@ TEST_CASE("General Math", "[math]")
 
 TEST_CASE("Float3", "[math]")
 {
-	NFloat<3> a(1.f, 2.f, 3.f);
+	Float3 a(1.f, 2.f, 3.f);
+    Float3 b(2.f, 3.f, 4.f);
+	a *= b;
 
-	a *= 3.f;
-	REQUIRE(isNearlyEqual(a[0], 3.f));
-	REQUIRE(isNearlyEqual(a[1], 6.f));
-	REQUIRE(isNearlyEqual(a[2], 9.f));
-
+	REQUIRE(Float3::isNearlyEqual(a, Float3(2.f, 6.f, 12.f)));
 }
 
 TEST_CASE("Vector3", "[math]")
 {
 	Vector3 a(1.f);
-	REQUIRE((a.x() == 1.f && a.y() == 1.f && a.z() == 1.f));
+	REQUIRE((a.x == 1.f && a.y == 1.f && a.z == 1.f));
 
 	Vector3 b(1.f, 2.f, 3.f);
-	REQUIRE((b.x() == 1.f && b.y() == 2.f && b.z() == 3.f));
+	REQUIRE((b.x == 1.f && b.y == 2.f && b.z == 3.f));
 	REQUIRE(Vector3::isNearlyEqual(b, Vector3(1.f, 2.f, 3.f)));
 	REQUIRE(Vector3::isNearlyEqual(b*10.f, Vector3(10.f, 20.f, 30.f)));
-	REQUIRE(Vector3::isNearlyEqual(b/10.f, Vector3(.1f, .2f, .3f)));
 
 	Vector3 c(10.f, 20.f, 30.f);
 	Vector3 d = a+b;
@@ -84,12 +81,12 @@ TEST_CASE("Quaternion", "[math]")
 	REQUIRE(Vector3::isNearlyEqual(r * r * Vector3(1.f, 1.f, 0.f), Vector3(-1.f, -1.f, 0.f)));
 
 	//make sure sequence of rotation maintains proper order
-	Quaternion rotateZ = Quaternion::fromAxisAndAngle(Vector3(0.f, 0.f, 1.f), PI_OVER_TWO);
-	Quaternion rotateX = Quaternion::fromAxisAndAngle(Vector3(1.f, 0.f, 0.f), PI);
+	Quaternion rotatez = Quaternion::fromAxisAndAngle(Vector3(0.f, 0.f, 1.f), PI_OVER_TWO);
+	Quaternion rotatex = Quaternion::fromAxisAndAngle(Vector3(1.f, 0.f, 0.f), PI);
 	Vector3 diag(1.f, 1.f, 0.f);
-	Vector3 diagRotatedByZ = rotateZ * diag;
-	Vector3 diagRotatedByZThenX = rotateX * diagRotatedByZ;
-	REQUIRE(Vector3::isNearlyEqual(diagRotatedByZThenX, Vector3(-1.f, -1.f, 0.f)));
-	Vector3 diagRotatedByZThenXSequential = rotateX * rotateZ * diag;
-	REQUIRE(Vector3::isNearlyEqual(diagRotatedByZThenX, diagRotatedByZThenX));
+	Vector3 diagRotatedByz = rotatez * diag;
+	Vector3 diagRotatedByzThenx = rotatex * diagRotatedByz;
+	REQUIRE(Vector3::isNearlyEqual(diagRotatedByzThenx, Vector3(-1.f, -1.f, 0.f)));
+	Vector3 diagRotatedByzThenxSequential = rotatex * rotatez * diag;
+	REQUIRE(Vector3::isNearlyEqual(diagRotatedByzThenx, diagRotatedByzThenx));
 }

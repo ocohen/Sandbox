@@ -1,71 +1,47 @@
 #ifndef OC_VECTOR3
 #define OC_VECTOR3
 
-#include "Vector.h"
+#include "VectorOps.h"
+#include "EqualOps.h"
+#include "Float3.h"
 
-struct Vector3 : public Vector<3>
+struct Vector3 : public VectorOps<Vector3>, public EqualOps<Vector3>
 {
-	Vector3()
-	{
-	}
+    float x;
+    float y;
+    float z;
+    enum{ order=3 };
 
-	Vector3(float inX, float inY, float inZ)
-	: TVector {inX, inY, inZ}
-	{
-	}
+    Vector3(){}
+    Vector3(float inX, float inY, float inZ): x(inX), y(inY), z(inZ){}
+    Vector3(const Vector3& rhs) : x(rhs.x), y(rhs.y), z(rhs.z){}
+    explicit Vector3(float k) : x(k), y(k), z(k) {}
+    explicit Vector3(const Float3& other) : x(other.x), y(other.y), z(other.z){}
 
-	explicit Vector3(float k)
-	: TVector(k)
-	{
-	}
 
-	explicit Vector3(const TFloat& rhs)
-	: TVector(rhs)
-	{
-	}
+    Vector3& operator=(const Vector3& rhs)
+    {
+        x = rhs.x;
+        y = rhs.y;
+        z = rhs.z;
+        return *this;
+    }
 
-	Vector3(const Vector3& other)
-	: TVector {other[0], other[1], other[2]}
-	{
-	}
+    float operator[](int index) const
+    {
+       const float* vals = &x;
+       return vals[index]; 
+    }
 
-	Vector3& operator=(const Vector3& other)
-	{
-		TVector::operator=(other);
-		return *this;
-	}
-
-	float x() const { return data[0]; }
-	float y() const { return data[1]; }
-	float z() const { return data[2]; }
-	float& x() { return data[0]; }
-	float& y() { return data[1]; }
-	float& z() { return data[2]; }
+    float& operator[](int index)
+    {
+       float* vals = &x;
+       return vals[index]; 
+    }
 
 	static Vector3 crossProduct(const Vector3& a, const Vector3& b)
 	{
-		return Vector3((a.y()*b.z() - a.z()*b.y()), -(a.x()*b.z() - a.z()*b.x()), (a.x()*b.y() - a.y()*b.x()));
+        return Vector3(a.y*b.z - a.z*b.y, -(a.x*b.z - a.z*b.x), a.x*b.y - a.y*b.x);
 	}
-
-	Vector3 operator*(float k) const { return Vector3(TVector::operator*(k)); }
-	Vector3 operator+(const Vector3& rhs) const { return Vector3(TVector::operator+(rhs)); }
-	Vector3 operator-(const Vector3& rhs) const { return Vector3(TVector::operator-(rhs)); }
-	Vector3 operator/(float k) const { return Vector3(TVector::operator/(k)); }
-
-	Vector3& operator*=(float k) { TVector::operator*=(k); return *this; }
-	Vector3& operator/=(float k) { TVector::operator/=(k); return *this; }
-	Vector3& operator+=(const Vector3& rhs) { TVector::operator+=(rhs); return *this; }
-	Vector3& operator-=(const Vector3& rhs) { TVector::operator+=(rhs); return *this; }
-
-	Vector3& operator-() { return Vector3(TVector::operator-());}
-
-	Vector3 getNormal() const { return Vector3(TVector::getNormal()); }
-	Vector3& normalize() { TVector::normalize(); return *this; }
 };
-
-inline Vector3 operator*(float lhs, const Vector3& rhs)
-{
-	return rhs * lhs;
-}
-
 #endif
