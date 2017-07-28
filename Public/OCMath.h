@@ -10,18 +10,18 @@
 
 inline bool isNearlyEqual(float x, float y, float tolerance = OC_BIG_EPSILON)
 {
-	const float diff = y-x;
-	return (diff >= -tolerance) && (diff <= tolerance);
+    const float diff = y-x;
+    return (diff >= -tolerance) && (diff <= tolerance);
 }
 
 inline bool isNearlyZero(float x, float tolerance = OC_BIG_EPSILON)
 {
-	return isNearlyEqual(x, 0.f);
+    return isNearlyEqual(x, 0.f);
 }
 
 inline float anglesToRadians(float angle)
 {
-	return PI * angle / 180.f;
+    return PI * angle / 180.f;
 }
 
 #endif

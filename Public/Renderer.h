@@ -54,8 +54,8 @@ inline Renderer::Renderer(int inWidth, int inHeight)
     setDimensions(inWidth, inHeight);
     
     Vector3 eye(0.f, 0.f, 0.f);
-	Vector3 target(0.f, 0.f, -1.f);
-	Vector3 up(0.f, 0.f, 1.f);
+    Vector3 target(0.f, 0.f, -1.f);
+    Vector3 up(0.f, 0.f, 1.f);
     setCameraLookAt(eye,target,up);
     setCameraLense(90);
 }
@@ -232,9 +232,9 @@ inline void Renderer::setCameraPosition(const Vector3& eye)
 
 inline void Renderer::setCameraLookAt(const Vector3& eye, const Vector3& target, const Vector3& refUp)
 {
-	Vector3 forward;
-	Vector3 up = refUp;
-	up.normalize();
+    Vector3 forward;
+    Vector3 up = refUp;
+    up.normalize();
     
     forward = target - eye;
     forward.normalize();
