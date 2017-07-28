@@ -1,6 +1,8 @@
 #ifndef OC_VECTOROPS_H
 #define OC_VECTOROPS_H
 
+#include <functional>
+
 template <typename T> struct FloatOps;
 
 template <typename T>

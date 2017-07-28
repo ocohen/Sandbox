@@ -99,7 +99,7 @@ inline void setColor(const Vector3* color)
 {
     if(color)
     {
-        glColor3f(color->x(), color->y(), color->z());
+        glColor3f(color->x, color->y, color->z);
     }else
     {
         glColor3f(1.f, 1.f, 1.f);
@@ -272,7 +272,7 @@ inline void Renderer::setCameraLookAt(const Vector3& eye, const Vector3& target,
 inline void Renderer::setCameraLense(float angleFOV, float nearPlane, float farPlane)
 {
     const float ratio = (width > 0.f && height > 0.f) ? width / height : 1.f;
-    const float size = std::tanf(anglesToRadians(angleFOV) / 2.f);
+    const float size = tanf(anglesToRadians(angleFOV) / 2.f);
     
     float right = size;
     float top = size / ratio;
