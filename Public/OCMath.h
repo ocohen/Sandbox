@@ -18,7 +18,7 @@ inline bool isNearlyEqual(float x, float y, float tolerance = OC_BIG_EPSILON)
 
 inline bool isNearlyEqual(double x, double y, double tolerance = OC_BIG_EPSILON_DOUBLE)
 {
-    const float diff = y-x;
+    const double diff = y-x;
     return (diff >= -tolerance) && (diff <= tolerance);
 }
 
