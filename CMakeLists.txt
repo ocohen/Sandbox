@@ -24,5 +24,5 @@ include_directories(${SDL2_INCLUDE_DIR})
 
 
 add_executable(UnitTest ${Common} ${UnitTestSource})
-#add_executable(Playground ${Common} ${PlaygroundSource})
-#target_link_libraries(Playground ${OPENGL_LIBRARY} ${SDL_MAIN} ${SDL2_LIBRARY})
+add_executable(Playground ${Common} ${PlaygroundSource})
+target_link_libraries(Playground ${OPENGL_LIBRARY} ${SDL_MAIN} ${SDL2_LIBRARY})
