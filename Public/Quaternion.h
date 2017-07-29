@@ -4,44 +4,36 @@
 #include "VectorOps.h"
 #include "Vector3.h"
 
-struct Quaternion : private VectorOps<Quaternion>, public EqualOps<Quaternion>
+template <typename Scaler>
+struct TQuaternion : private VectorOps<TQuaternion<Scaler>, Scaler>, public EqualOps<TQuaternion<Scaler>>
 {
     Vector3 imaginary;
-    float real;
+    Scaler real;
 
-    Quaternion(){}
+    TQuaternion(){}
 
-    Quaternion(float x, float y, float z, float w) : imaginary(x,y,z), real(w){}
-    Quaternion(const Vector3& inImaginary, float inReal) : imaginary(inImaginary), real(inReal){}    //NOTE: this is _not_ axis and angle, see fromAxisAndAngle
-    Quaternion(const Float3& inImaginary, float inReal) : imaginary(inImaginary), real(inReal){}    //NOTE: this is _not_ axis and angle, see fromAxisAndAngle
+    TQuaternion(Scaler x, Scaler y, Scaler z, Scaler w) : imaginary(x,y,z), real(w){}
+    TQuaternion(const Vector3& inImaginary, Scaler inReal) : imaginary(inImaginary), real(inReal){}    //NOTE: this is _not_ axis and angle, see fromAxisAndAngle
+    TQuaternion(const Scaler3<Scaler>& inImaginary, Scaler inReal) : imaginary(inImaginary), real(inReal){}    //NOTE: this is _not_ axis and angle, see fromAxisAndAngle
 
-    Quaternion(const Quaternion& other) : imaginary(other.imaginary), real(other.real){}
+    Scaler operator[](int index) const { const Scaler* vals = &imaginary.x; return vals[index]; }
+    Scaler& operator[](int index) { Scaler* vals = &imaginary.x; return vals[index]; }
 
-    Quaternion& operator=(const Quaternion& rhs)
+    static TQuaternion fromAxisAndAngle(const Vector3& axis, Scaler angle)
     {
-        imaginary = rhs.imaginary;
-        real = rhs.real;
-        return *this;
+        const Scaler halfHangle = angle * static_cast<Scaler>(0.5);
+        const Scaler sinHalfAngle = std::sin(halfHangle);
+        const Scaler cosHalfAngle = std::cos(halfHangle);
+        return TQuaternion(axis * sinHalfAngle, cosHalfAngle);
     }
 
-    float operator[](int index) const { const float* vals = &imaginary.x; return vals[index]; }
-    float& operator[](int index) { float* vals = &imaginary.x; return vals[index]; }
-
-    static Quaternion fromAxisAndAngle(const Vector3& axis, float angle)
+    void toAxisAngle(Vector3& outAxis, Scaler& angle) const
     {
-        const float halfHangle = angle * 0.5f;
-        const float sinHalfAngle = std::sin(halfHangle);
-        const float cosHalfAngle = std::cos(halfHangle);
-        return Quaternion(axis * sinHalfAngle, cosHalfAngle);
-    }
-
-    void toAxisAngle(Vector3& outAxis, float& angle) const
-    {
-        angle = 2.f * std::acos(real);
-        const float denom = 1.f - real*real;
+        angle = static_cast<Scaler>(2.0) * std::acos(real);
+        const Scaler denom = static_cast<Scaler>(1.0) - real*real;
         if(denom > OC_BIG_EPSILON)
         {
-            const float oneOverDenom = 1.f / std::sqrt(denom);
+            const Scaler oneOverDenom = static_cast<Scaler>(1.0) / std::sqrt(denom);
             outAxis = imaginary * oneOverDenom;
         }
         else
@@ -52,10 +44,10 @@ struct Quaternion : private VectorOps<Quaternion>, public EqualOps<Quaternion>
 
     Vector3 rotateVector(const Vector3& R) const
     {
-        //http://people.csail.mit.edu/bkph/articles/Quaternions.pdf
+        //http://people.csail.mit.edu/bkph/articles/TQuaternions.pdf
         const Vector3& Q = imaginary;
-        const float q = real;
-        return  R + 2.f*q*Vector3::crossProduct(Q,R) + Vector3::crossProduct(2.f*Q, Vector3::crossProduct(Q,R));
+        const Scaler q = real;
+        return  R + static_cast<Scaler>(2.0)*q*Vector3::crossProduct(Q,R) + Vector3::crossProduct(static_cast<Scaler>(2.0)*Q, Vector3::crossProduct(Q,R));
     }
 
     Vector3 operator*(const Vector3& R) const
@@ -63,25 +55,30 @@ struct Quaternion : private VectorOps<Quaternion>, public EqualOps<Quaternion>
         return rotateVector(R);
     }
 
-    Quaternion operator*(const Quaternion& rhs) const
+    TQuaternion operator*(const TQuaternion& rhs) const
     {
-        //http://people.csail.mit.edu/bkph/articles/Quaternions.pdf
+        //http://people.csail.mit.edu/bkph/articles/TQuaternions.pdf
         const Vector3& P = imaginary;
         const Vector3& Q = rhs.imaginary;
-        const float p = real;
-        const float q = rhs.real;
-        return Quaternion((p*Q + q*P + Vector3::crossProduct(P,Q)), p*q - Vector3::dotProduct(P,Q));
+        const Scaler p = real;
+        const Scaler q = rhs.real;
+        return TQuaternion((p*Q + q*P + Vector3::crossProduct(P,Q)), p*q - Vector3::dotProduct(P,Q));
     }
 
-    Quaternion getInverse() const
+    TQuaternion getInverse() const
     {
-        return Quaternion(-imaginary, real);
+        return TQuaternion(-imaginary, real);
     }
 
-    using VectorOps<Quaternion>::getNormal;
-    using VectorOps<Quaternion>::normalize;
-    using VectorOps<Quaternion>::length;
-    using VectorOps<Quaternion>::length2;
+    typedef VectorOps<TQuaternion,Scaler> VOps;
+
+    using VOps::getNormal;
+    using VOps::normalize;
+    using VOps::length;
+    using VOps::length2;
 };
+
+typedef TQuaternion<float> Quaternion;
+typedef TQuaternion<double> QuaternionD;
 
 #endif

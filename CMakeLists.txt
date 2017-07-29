@@ -8,7 +8,7 @@ include_directories(${CMAKE_SOURCE_DIR}/Public)
 include_directories(${CMAKE_SOURCE_DIR}/External)
 
 set(Source )
-set(Headers Public/VectorOps.h Public/EqualOps.h Public/FloatOps.h Public/Vector3.h Public/Vector4.h Public/OCMath.h Public/Quaternion.h Public/Renderer.h Public/Float3.h Public/Float4.h)
+set(Headers Public/VectorOps.h Public/EqualOps.h Public/PairwiseOps.h Public/Vector3.h Public/Vector4.h Public/OCMath.h Public/Quaternion.h Public/Renderer.h Public/Scaler3.h Public/Float3.h Public/Scaler4.h Public/Float4.h Public/TVector3.h Public/TVector4.h)
 set(Common ${Source} ${Headers})
 
 set(UnitTestSource Private/MathTest.cpp)
@@ -24,5 +24,5 @@ include_directories(${SDL2_INCLUDE_DIR})
 
 
 add_executable(UnitTest ${Common} ${UnitTestSource})
-add_executable(Playground ${Common} ${PlaygroundSource})
-target_link_libraries(Playground ${OPENGL_LIBRARY} ${SDL_MAIN} ${SDL2_LIBRARY})
+#add_executable(Playground ${Common} ${PlaygroundSource})
+#target_link_libraries(Playground ${OPENGL_LIBRARY} ${SDL_MAIN} ${SDL2_LIBRARY})

@@ -3,16 +3,16 @@
 
 #include <functional>
 
-template <typename T> struct FloatOps;
+template <typename T, typename Scaler> struct PairwiseOps;
 
-template <typename T>
+template <typename T, typename Scaler>
 struct VectorOps
 {
     T& get() {return *static_cast<T*>(this); }
     const T& get() const {return *static_cast<const T*>(this); }
 
-    FloatOps<T>& asFloat(){ return *static_cast<FloatOps<T>*>(this); }
-    const FloatOps<T>& asFloat() const { return *static_cast<const FloatOps<T>*>(this); }
+    PairwiseOps<T, Scaler>& asScalers(){ return *static_cast<PairwiseOps<T, Scaler>*>(this); }
+    const PairwiseOps<T, Scaler>& asScalers() const { return *static_cast<const PairwiseOps<T, Scaler>*>(this); }
 
     template<typename Func>
     T pairwise(const T& rhs, Func func) const
@@ -36,7 +36,7 @@ struct VectorOps
     }
 
     template<typename Func>
-    T pairwise(float rhs, Func func) const
+    T pairwise(Scaler rhs, Func func) const
     {
         T ret;
         const T& lhs = get();
@@ -49,16 +49,16 @@ struct VectorOps
 
 
     template<typename Func>
-    T& pairwise(float rhs, Func func)
+    T& pairwise(Scaler rhs, Func func)
     {
         T& ret = get();
         ret = pairwise(rhs, func);
         return ret;
     }
 
-    static float dotProduct(const T& lhs, const T& rhs)
+    static Scaler dotProduct(const T& lhs, const T& rhs)
     {
-        float sum = 0.f;
+        Scaler sum = 0.f;
         for(int i=0; i<T::order; ++i)
         {
             sum += lhs[i] * rhs[i];
@@ -66,25 +66,25 @@ struct VectorOps
         return sum;
     }
 
-    float dotProduct(const T& rhs) const
+    Scaler dotProduct(const T& rhs) const
     {
         const T& lhs = get();
         return dotProduct(lhs, rhs);
     }
 
-    float length2() const
+    Scaler length2() const
     {
         return dotProduct(get());
     }
 
-    float length() const
+    Scaler length() const
     {
         return std::sqrt(length2());
     }
 
     T getNormal() const
     {
-        const float oneOver = 1.f / length();
+        const Scaler oneOver = 1.f / length();
         return get() * oneOver;
     }
 
@@ -95,9 +95,9 @@ struct VectorOps
         return ret;
     }
 
-    T operator+(const T& rhs) const{ return pairwise(rhs, std::plus<float>()); }
-    T operator-(const T& rhs) const{ return pairwise(rhs, std::minus<float>()); }
-    T operator*(float rhs) const{ return pairwise(rhs, std::multiplies<float>()); }
+    T operator+(const T& rhs) const{ return pairwise(rhs, std::plus<Scaler>()); }
+    T operator-(const T& rhs) const{ return pairwise(rhs, std::minus<Scaler>()); }
+    T operator*(Scaler rhs) const{ return pairwise(rhs, std::multiplies<Scaler>()); }
     T operator-() const
     {
         T ret;
@@ -124,7 +124,7 @@ struct VectorOps
         return ret;
     }
 
-    T& operator*=(float rhs)
+    T& operator*=(Scaler rhs)
     {
         T& ret = get();
         ret = ret * rhs;
@@ -132,6 +132,6 @@ struct VectorOps
     }
 };
 
-template <typename T> T operator*(float lhs, const VectorOps<T>& rhs){ return rhs * lhs; }
+template <typename T, typename Scaler> T operator*(Scaler lhs, const VectorOps<T, Scaler>& rhs){ return rhs * lhs; }
 
 #endif

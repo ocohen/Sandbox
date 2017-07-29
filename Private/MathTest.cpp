@@ -5,6 +5,7 @@
 #include "Vector3.h"
 #include "Vector4.h"
 #include "Quaternion.h"
+#include "Float3.h"
 
 TEST_CASE("General Math", "[math]")
 {
@@ -15,13 +16,16 @@ TEST_CASE("General Math", "[math]")
     REQUIRE(isNearlyEqual(1.f, 1.f - 1e-3f) == false);
 }
 
-TEST_CASE("Float3", "[math]")
+TEST_CASE("Scaler3", "[math]")
 {
     Float3 a(1.f, 2.f, 3.f);
     Float3 b(2.f, 3.f, 4.f);
     a *= b;
-
     REQUIRE(Float3::isNearlyEqual(a, Float3(2.f, 6.f, 12.f)));
+
+    Int3 x(1,2,3);
+    x += 1;
+    REQUIRE(Int3::isNearlyEqual(x, Int3(2,3,4)));
 }
 
 TEST_CASE("Vector3", "[math]")
@@ -40,8 +44,8 @@ TEST_CASE("Vector3", "[math]")
     REQUIRE(Vector3::isNearlyEqual(b+c, Vector3(11.f, 22.f, 33.f)));
     REQUIRE(Vector3::isNearlyEqual(b-c, Vector3(-9.f, -18.f, -27.f)));
 
-    REQUIRE(isNearlyEqual(Vector3::dotProduct(b,c), 10+40+90));
-    REQUIRE(isNearlyEqual(b.length(), sqrt(1.f+4.f+9.f)));
+    REQUIRE(isNearlyEqual(Vector3::dotProduct(b,c), 10.f+40.f+90.f));
+    REQUIRE(isNearlyEqual(b.length(), sqrtf(1.f+4.f+9.f)));
     REQUIRE(isNearlyEqual(b.length2(), 1.f+4.f+9.f));
     REQUIRE(Vector3::isNearlyEqual(b.getNormal(), Vector3(1.f / 3.74165738677f, 2.f / 3.74165738677f, 3.f / 3.74165738677f)));
 
