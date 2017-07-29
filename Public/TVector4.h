@@ -6,7 +6,7 @@
 #include "Scaler4.h"
 
 template <typename Scaler>
-struct TVector4 : public VectorOps<TVector4<Scaler>, Scaler>, public EqualOps<TVector4<Scaler>>
+struct TVector4 : public VectorOps<TVector4<Scaler>, Scaler>
 {
     enum{ order=4 };
     Scaler x;

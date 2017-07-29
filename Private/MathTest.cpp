@@ -7,6 +7,10 @@
 #include "Quaternion.h"
 #include "Float3.h"
 
+static_assert(sizeof(Vector3) == 12, "Vector3 assumes to be tightly packed");
+static_assert(sizeof(Vector4) == 16, "Vector4 assumes to be tightly packed");
+static_assert(sizeof(Quaternion) == 16, "Quaternion assumes to be tightly packed");
+
 TEST_CASE("General Math", "[math]")
 {
     REQUIRE(isNearlyEqual(1.f, 1.f) == true);
@@ -93,4 +97,15 @@ TEST_CASE("Quaternion", "[math]")
     REQUIRE(Vector3::isNearlyEqual(diagRotatedByzThenx, Vector3(-1.f, -1.f, 0.f)));
     Vector3 diagRotatedByzThenxSequential = rotatex * rotatez * diag;
     REQUIRE(Vector3::isNearlyEqual(diagRotatedByzThenx, diagRotatedByzThenx));
+    REQUIRE(isNearlyEqual(rotatez.length(), 1.f));
+    REQUIRE(isNearlyEqual((rotatex*rotatez).length(), 1.f));
+
+    //make sure doubles work
+    QuaternionD rD = QuaternionD::fromAxisAndAngle(Vector3d(0.f, 0.f, 1.f), PI_OVER_TWO);
+    double angleD;
+    Vector3d axisD;
+    rD.toAxisAngle(axisD, angleD);
+    REQUIRE(angleD == PI_OVER_TWO);
+    REQUIRE(Vector3d::isNearlyEqual(axisD, Vector3d(0.f, 0.f, 1.f)));
+
 }

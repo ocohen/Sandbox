@@ -6,7 +6,7 @@
 #include "Scaler3.h"
 
 template <typename Scaler>
-struct TVector3 : public VectorOps<TVector3<Scaler>, Scaler>, public EqualOps<TVector3<Scaler>>
+struct TVector3 : public VectorOps<TVector3<Scaler>, Scaler>
 {
     enum{ order=3 };
     Scaler x;
@@ -35,4 +35,5 @@ struct TVector3 : public VectorOps<TVector3<Scaler>, Scaler>, public EqualOps<TV
         return TVector3(a.y*b.z - a.z*b.y, -(a.x*b.z - a.z*b.x), a.x*b.y - a.y*b.x);
     }
 };
+
 #endif

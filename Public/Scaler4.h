@@ -5,7 +5,7 @@
 #include "EqualOps.h"
 
 template <typename Scaler>
-struct Scaler4 : public PairwiseOps<Scaler4<Scaler>,Scaler>, public EqualOps<Scaler4<Scaler>>
+struct Scaler4 : public PairwiseOps<Scaler4<Scaler>,Scaler>
 {
     enum{ order=4 };
 

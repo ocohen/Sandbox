@@ -148,7 +148,7 @@ inline void Renderer::drawMesh(const Vector3* vertices, const unsigned short* tr
     setColor(color);
     if(solid)
     {
-        glVertexPointer(3, GL_FLOAT, 0, (float*)vertices);    
+        glVertexPointer(3, GL_FLOAT, sizeof(vertices[0]), &vertices[0].x);    
         glDrawElements(GL_TRIANGLES, numTris*3, GL_UNSIGNED_SHORT, tris);
     }else
     {

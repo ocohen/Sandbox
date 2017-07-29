@@ -2,11 +2,12 @@
 #define OC_VECTOROPS_H
 
 #include <functional>
+#include "EqualOps.h"
 
 template <typename T, typename Scaler> struct PairwiseOps;
 
 template <typename T, typename Scaler>
-struct VectorOps
+struct VectorOps : public EqualOps<T>
 {
     T& get() {return *static_cast<T*>(this); }
     const T& get() const {return *static_cast<const T*>(this); }
@@ -133,5 +134,4 @@ struct VectorOps
 };
 
 template <typename T, typename Scaler> T operator*(Scaler lhs, const VectorOps<T, Scaler>& rhs){ return rhs * lhs; }
-
 #endif
