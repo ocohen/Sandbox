@@ -78,6 +78,8 @@ struct TQuaternion : private VectorOps<TQuaternion<Scaler>, Scaler>
     using VOps::length;
     using VOps::length2;
     using VOps::isNearlyEqual;
+
+    friend VOps;
 };
 
 typedef TQuaternion<float> Quaternion;
