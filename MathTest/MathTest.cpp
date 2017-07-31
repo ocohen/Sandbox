@@ -6,6 +6,7 @@
 #include "Vector4.h"
 #include "Quaternion.h"
 #include "Float3.h"
+#include "Transform.h"
 
 static_assert(sizeof(Vector3) == 12, "Vector3 assumes to be tightly packed");
 static_assert(sizeof(Vector4) == 16, "Vector4 assumes to be tightly packed");
@@ -108,4 +109,37 @@ TEST_CASE("Quaternion", "[math]")
     REQUIRE(angleD == PI_OVER_TWO);
     REQUIRE(Vector3d::isNearlyEqual(axisD, Vector3d(0.f, 0.f, 1.f)));
 
+}
+
+TEST_CASE("Transform", "[math]")
+{
+    const Transform translate(Vector3(10.f, 11.f, 12.f), Quaternion::fromAxisAndAngle(Vector3(1.f, 0.f, 0.f), 0.f));
+    const Transform rotate(Vector3(0.f, 0.f, 0.f), Quaternion::fromAxisAndAngle(Vector3(1.f, 0.f, 0.f), PI_OVER_TWO));
+    const Transform tm(Vector3(10.f, 11.f, 12.f), Quaternion::fromAxisAndAngle(Vector3(1.f, 0.f, 0.f), PI_OVER_TWO));
+
+    //origin
+    {
+        const Vector3 origin(0.f, 0.f, 0.f);
+        REQUIRE(Vector3::isNearlyEqual(translate.transformPoint(origin), Vector3(10.f, 11.f, 12.f)));
+        REQUIRE(Vector3::isNearlyEqual(translate.transformVector(origin), Vector3(0.f, 0.f, 0.f)));
+
+        REQUIRE(Vector3::isNearlyEqual(rotate.transformPoint(origin), Vector3(0.f, 0.f, 0.f)));
+        REQUIRE(Vector3::isNearlyEqual(rotate.transformVector(origin), Vector3(0.f, 0.f, 0.f)));
+
+        REQUIRE(Vector3::isNearlyEqual(tm.transformPoint(origin), Vector3(10.f, 11.f, 12.f)));
+        REQUIRE(Vector3::isNearlyEqual(tm.transformVector(origin), Vector3(0.f, 0.f, 0.f)));
+    }
+
+    //off-origin
+    {
+        const Vector3 x(1.f, 2.f, 3.f);
+        REQUIRE(Vector3::isNearlyEqual(translate.transformPoint(x), Vector3(11.f, 13.f, 15.f)));
+        REQUIRE(Vector3::isNearlyEqual(translate.transformVector(x), Vector3(1.f, 2.f, 3.f)));
+
+        REQUIRE(Vector3::isNearlyEqual(rotate.transformPoint(x), Vector3(1.f, -3.f, 2.f)));
+        REQUIRE(Vector3::isNearlyEqual(rotate.transformVector(x), Vector3(1.f, -3.f, 2.f)));
+
+        REQUIRE(Vector3::isNearlyEqual(tm.transformPoint(x), Vector3(11.f, 8.f, 14.f)));
+        REQUIRE(Vector3::isNearlyEqual(tm.transformVector(x), Vector3(1.f, -3.f, 2.f)));
+    }
 }
