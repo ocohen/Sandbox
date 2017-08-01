@@ -12,7 +12,12 @@
 #endif
 
 #include "Vector3.h"
+#include "Transform.h"
 
+//TODO: move these into a proper static
+const Vector3 Red = { 1.f, 0.f, 0.f };
+const Vector3 Green = Vector3(0.f, 1.f, 0.f);
+const Vector3 Blue = Vector3(0.f, 0.f, 1.f);
 
 class Renderer
 {
@@ -25,7 +30,8 @@ public:
     void drawLine(const Vector3& start, const Vector3&end, const Vector3* color = 0, float thickness = 1.f);
     void drawTriangle(const Vector3& a, const Vector3& b, const Vector3& c, const Vector3* color = 0, float thickness = 1.f);
     void drawSolidTriangle(const Vector3& a, const Vector3& b, const Vector3& c, const Vector3* color);
-    void drawCircle(const Vector3& center, float radius, const Vector3& normal, int numSections=16, const Vector3* color = 0, float thickness=1.f);
+    void drawOrientedCircles(const Transform& tm, float radius, int numSections=16, float thickness=1.f);
+    void drawCross(const Transform& tm, float size, float thickness = 1.f);
     //tris is just an index buffer, but we treat it as triangles (num indices = numTris * 3)
     void drawMesh(const Vector3* vertices, const unsigned short* tris, int numTris, const Vector3* color = 0, bool solid=true, float thickness =1.f);
     void drawSphere(const Vector3& center, float radius, int numSections=16, const Vector3* color = 0, float thickness=1.f);
@@ -141,6 +147,56 @@ inline void Renderer::drawSolidTriangle(const Vector3& a, const Vector3& b, cons
     drawVertex(b);
     drawVertex(c);
     glEnd();
+}
+
+inline void Renderer::drawOrientedCircles(const Transform& tm, float radius, int numSections/* =16 */, float thickness/* =1.f */)
+{
+    const Vector3 localX = tm.transformVector(Vector3(1.f, 0.f, 0.f));
+    const Vector3 localY = tm.transformVector(Vector3(0.f, 1.f, 0.f));
+    const Vector3 localZ = tm.transformVector(Vector3(0.f, 0.f, 1.f));
+
+    const float rads = 2.f*PI / numSections;
+    
+    for(int i=0; i < numSections; ++i)
+    {
+        const float curRad = rads*i;
+        const float nextRad = rads*(i+1);
+        const Vector3 a = tm.translation + radius * (cos(curRad) * localX + sin(curRad) * localY);
+        const Vector3 b = tm.translation + radius * (cos(nextRad) * localX + sin(nextRad) * localY);
+
+        drawLine(a, b, &Blue, thickness);
+    }
+
+    for (int i = 0; i < numSections; ++i)
+    {
+        const float curRad = rads*i;
+        const float nextRad = rads*(i + 1);
+        const Vector3 a = tm.translation + radius * (cos(curRad) * localZ + sin(curRad) * localY);
+        const Vector3 b = tm.translation + radius * (cos(nextRad) * localZ + sin(nextRad) * localY);
+
+        drawLine(a, b, &Red, thickness);
+    }
+
+    for (int i = 0; i < numSections; ++i)
+    {
+        const float curRad = rads*i;
+        const float nextRad = rads*(i + 1);
+        const Vector3 a = tm.translation + radius * (cos(curRad) * localZ + sin(curRad) * localX);
+        const Vector3 b = tm.translation + radius * (cos(nextRad) * localZ + sin(nextRad) * localX);
+
+        drawLine(a, b, &Green, thickness);
+    }
+}
+
+inline void Renderer::drawCross(const Transform& tm, float size, float thickness /* = 1.f */)
+{
+    const Vector3 localX = tm.transformVector(Vector3(1.f, 0.f, 0.f));
+    const Vector3 localY = tm.transformVector(Vector3(0.f, 1.f, 0.f));
+    const Vector3 localZ = tm.transformVector(Vector3(0.f, 0.f, 1.f));
+
+    drawLine(tm.translation, tm.translation + localX * size , &Red, thickness);
+    drawLine(tm.translation, tm.translation + localY * size , &Green, thickness);
+    drawLine(tm.translation, tm.translation + localZ * size , &Blue, thickness);
 }
 
 inline void Renderer::drawMesh(const Vector3* vertices, const unsigned short* tris, int numTris, const Vector3* color, bool solid, float thickness)

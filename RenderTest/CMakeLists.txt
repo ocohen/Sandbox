@@ -7,7 +7,7 @@ include_directories(${CMAKE_SOURCE_DIR}/../Public)
 include_directories(${CMAKE_SOURCE_DIR}/../External)
 
 set(Source RenderTest.cpp)
-set(Headers ../Public/VectorOps.h ../Public/EqualOps.h ../Public/PairwiseOps.h ../Public/Vector3.h ../Public/OCMath.h ../Public/Renderer.h ../Public/Scaler3.h ../Public/Float3.h ../Public/TVector3.h)
+set(Headers ../Public/VectorOps.h ../Public/EqualOps.h ../Public/PairwiseOps.h ../Public/Vector3.h ../Public/OCMath.h ../Public/Renderer.h ../Public/Scaler3.h ../Public/Float3.h ../Public/TVector3.h ../Public/Quaternion.h ../Public/Transform.h)
 
 #OpenGL
 find_package(OpenGL)

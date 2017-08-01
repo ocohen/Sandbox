@@ -2,6 +2,7 @@
 #define OC_TRANSFORM_H
 
 #include "TVector3.h"
+#include "Quaternion.h"
 
 template <typename Scaler>
 struct TTransform

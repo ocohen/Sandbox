@@ -24,6 +24,8 @@ int main(int argc, char *argv[])
                          };
 
     unsigned short indices[] = {0,1,2,2,3,1}; 
+
+    Transform circlesTM(Vector3(2.f, 0.f, 0.f), Quaternion::fromAxisAndAngle(Vector3(0.f, 0.f, 1.f), PI_OVER_TWO * 0.5f));
     
     SDL_Event event;
     bool quit = false;
@@ -37,14 +39,16 @@ int main(int argc, char *argv[])
             }
         }
 
-        cameraPosition[0] = 3 * sin(r);
-        cameraPosition[2] = 3 * cos(r);
+        cameraPosition[0] = 5 * sin(r);
+        cameraPosition[2] = 5 * cos(r);
         renderer.setCameraLookAt(cameraPosition, target, up);
         r += 0.01f;
 
         renderer.clear();
         renderer.drawMesh(vertices, indices, sizeof(indices) / (sizeof(short) * 3), &red);
         renderer.drawMesh(vertices, indices, sizeof(indices) / (sizeof(short) * 3), &green, false, 2);
+        renderer.drawOrientedCircles(circlesTM, .3f, 16, 3.f);
+        renderer.drawCross(circlesTM, .6f, 3.f);
         renderer.flush();
 
         SDL_GL_SwapWindow(displayWindow);
