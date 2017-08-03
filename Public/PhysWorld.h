@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "RigidBody.h"
+#include "Constraint.h"
 #include "Renderer.h"
 
 class PhysWorld
@@ -27,6 +28,14 @@ public:
         //update constraints
 
         //solve constraints
+        for(int itr = 0; itr < 80; ++itr)	//super hacky constraint requires 80 iterations to avoid drift
+        {
+            for (Constraint& constraint : constraints)
+            {
+                constraint.solveConstraint();
+            }
+        }
+        
 
         //integrate position
         for (RigidBody& rb : bodies)
@@ -46,8 +55,21 @@ public:
         return ret;
     }
 
+    int createConstraint(int body1, int body2)
+    {
+        Constraint constraint;
+        constraint.body1 = &bodies[body1];
+        constraint.body2 = &bodies[body2];
+        constraints.push_back(constraint);
+
+        return (int)constraints.size() - 1;
+    }
+
+    RigidBody& getBody(int idx) { return bodies[idx]; }
+
 private:
 	std::vector<RigidBody> bodies;
+    std::vector<Constraint> constraints;
     Vector3 gravity;
     friend class PhysWorldDebugger;
 };
