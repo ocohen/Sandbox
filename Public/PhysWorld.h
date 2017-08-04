@@ -27,12 +27,14 @@ public:
 
         //update constraints
 
+        const float invDeltaTime = 1.f / deltaTime;
+
         //solve constraints
-        for(int itr = 0; itr < 80; ++itr)	//super hacky constraint requires 80 iterations to avoid drift
+        for(int itr = 0; itr < 4; ++itr)
         {
             for (Constraint& constraint : constraints)
             {
-                constraint.solveConstraint();
+                constraint.solveConstraint(invDeltaTime);
             }
         }
         
@@ -57,15 +59,12 @@ public:
 
     int createConstraint(int body1, int body2)
     {
-        Constraint constraint;
-        constraint.body1 = &bodies[body1];
-        constraint.body2 = &bodies[body2];
-        constraints.push_back(constraint);
-
+        constraints.emplace_back(&bodies[body1], &bodies[body2]);
         return (int)constraints.size() - 1;
     }
 
     RigidBody& getBody(int idx) { return bodies[idx]; }
+    Constraint& getConstraint(int idx){ return constraints[idx]; }
 
 private:
 	std::vector<RigidBody> bodies;
