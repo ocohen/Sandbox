@@ -12,7 +12,8 @@ struct VectorOps : public EqualOps<T>
     T& get() {return *static_cast<T*>(this); }
     const T& get() const {return *static_cast<const T*>(this); }
 
-    PairwiseOps<T, Scaler>& asScalers(){ return *static_cast<PairwiseOps<T, Scaler>*>(this); }
+    template <typename ScalersType>
+    ScalersType& asScalers(){ return *static_cast<ScalersType*>(this); }
     const PairwiseOps<T, Scaler>& asScalers() const { return *static_cast<const PairwiseOps<T, Scaler>*>(this); }
 
     template<typename Func>

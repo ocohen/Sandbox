@@ -10,6 +10,12 @@
 #define PI 3.14159265359f
 #define PI_OVER_TWO 1.57079632679f
 
+template <typename T>
+inline T sign(T x)
+{
+    return x < (T)0 ? (T)-1 : (x > (T)0 ? (T)1 : (T)0);
+}
+
 inline bool isNearlyEqual(float x, float y, float tolerance = OC_BIG_EPSILON)
 {
     const float diff = y-x;

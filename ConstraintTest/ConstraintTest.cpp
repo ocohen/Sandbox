@@ -18,6 +18,7 @@ int main(int argc, char *argv[])
 
     PhysWorld physWorld(Vector3(0.f, -98.1f, 0.f));
     RigidBodyDesc simpleBody;
+    simpleBody.linearDamping = 0.2f;
 
     const int numBodies = 9;
 
@@ -35,13 +36,6 @@ int main(int argc, char *argv[])
     for(int i=0; i<numBodies-1; ++i)
     {
         physWorld.createConstraint(i, i+1);
-    }
-
-    for(int i=0; i<numBodies-1; ++i)
-    {
-        Constraint& constraint = physWorld.getConstraint(i);
-        //constraint.invMassScale2 = 0.f;
-        //constraint.linearProjection = 2.f;
     }
 
     PhysWorldDebugger physWorldDebugger(physWorld, renderer);
