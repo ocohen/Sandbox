@@ -142,4 +142,15 @@ TEST_CASE("Transform", "[math]")
         REQUIRE(Vector3::isNearlyEqual(tm.transformPoint(x), Vector3(11.f, 8.f, 14.f)));
         REQUIRE(Vector3::isNearlyEqual(tm.transformVector(x), Vector3(1.f, -3.f, 2.f)));
     }
+
+    //concat
+    {
+        const Vector3 x(1.f, 2.f, 3.f);
+        const Transform rotateZAndMoveX(Vector3(10.f, 0.f, 0.f), Quaternion::fromAxisAndAngle(Vector3(0.f, 0.f, 1.f), PI_OVER_TWO));
+        const Transform rotateZAndMoveY(Vector3(0.f, 10.f, 0.f), Quaternion::fromAxisAndAngle(Vector3(0.f, 0.f, 1.f), -PI));
+        const Transform compound = rotateZAndMoveY * rotateZAndMoveX;
+
+        REQUIRE(Vector3::isNearlyEqual(compound.transformPoint(x), rotateZAndMoveY.transformPoint(rotateZAndMoveX.transformPoint(x))));
+        REQUIRE(Vector3::isNearlyEqual(compound.transformPoint(x), Vector3(-8.f, 9.f, 3.f)));
+    }
 }

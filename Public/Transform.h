@@ -22,6 +22,12 @@ struct TTransform
         return (rotation * rhs) + translation;
     }
 
+    // concat so that (this * rhs).transformPoint(x) = this.transformPoint(rhs.transformPoint(x))
+    TTransform<Scaler> operator*(const TTransform<Scaler>& rhs) const
+    {
+        return TTransform<Scaler>( translation + (rotation * rhs.translation), rotation * rhs.rotation);
+    }
+
 	TVector3<Scaler> translation;
 	TQuaternion<Scaler> rotation;
 };

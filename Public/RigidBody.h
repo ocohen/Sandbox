@@ -1,8 +1,10 @@
 #ifndef OC_RIGIDBODY_H
 #define OC_RIGIDBODY_H
 
+#include <vector>
 #include "Vector3.h"
 #include "Transform.h"
+#include "Shape.h"
 
 struct RigidBodyDesc
 {
@@ -18,7 +20,7 @@ struct RigidBodyDesc
     float invMass;
     float linearDamping;
     float angularDamping;
-    //geometry info
+    std::vector<Shape*> shapes;
 };
 
 struct RigidBody
@@ -36,6 +38,18 @@ struct RigidBody
         , angularVelocity(0.f, 0.f, 0.f)
         , bodyToWorld(inBodyToWorld)
     {
+        for(Shape* shape : rigidBodyDesc.shapes)
+        {
+            shapes.push_back(shape->clone());
+        }
+    }
+
+    ~RigidBody()
+    {
+        for(Shape* shape : shapes)
+        {
+            delete shape;
+        }
     }
 
     Vector3 invInertia;
@@ -46,6 +60,8 @@ struct RigidBody
 	Vector3 linearVelocity;
 	Vector3 angularVelocity;
 	Transform bodyToWorld;
+
+    std::vector<Shape*> shapes;   //For now just shove everything into the rigid body instead of breaking it into proper SOA
 };
 
 #endif
