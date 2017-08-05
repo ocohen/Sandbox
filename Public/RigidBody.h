@@ -2,6 +2,7 @@
 #define OC_RIGIDBODY_H
 
 #include <vector>
+#include <memory>
 #include "Vector3.h"
 #include "Transform.h"
 #include "Shape.h"
@@ -40,15 +41,7 @@ struct RigidBody
     {
         for(Shape* shape : rigidBodyDesc.shapes)
         {
-            shapes.push_back(shape->clone());
-        }
-    }
-
-    ~RigidBody()
-    {
-        for(Shape* shape : shapes)
-        {
-            delete shape;
+            shapes.push_back(std::shared_ptr<Shape>(shape->clone()));
         }
     }
 
@@ -61,7 +54,7 @@ struct RigidBody
 	Vector3 angularVelocity;
 	Transform bodyToWorld;
 
-    std::vector<Shape*> shapes;   //For now just shove everything into the rigid body instead of breaking it into proper SOA
+    std::vector<std::shared_ptr<Shape>> shapes;   //super hacky and need shared_ptr :(
 };
 
 #endif

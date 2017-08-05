@@ -93,7 +93,7 @@ public:
             renderer.drawOrientedCircles(rigidBody.bodyToWorld, 3.f, 16, 2.f);
             renderer.drawCross(rigidBody.bodyToWorld, 3.f, 2.f);
 
-            for(const Shape* shape : rigidBody.shapes)
+            for(const std::shared_ptr<Shape>& shape : rigidBody.shapes)
             {
                 renderShape(*shape, rigidBody.bodyToWorld, renderer);
             }
