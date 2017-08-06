@@ -1,6 +1,7 @@
 #ifndef OC_CONSTRAINT_H
 #define OC_CONSTRAINT_H
 
+#include <float.h>
 #include "Vector3.h"
 #include "Transform.h"
 

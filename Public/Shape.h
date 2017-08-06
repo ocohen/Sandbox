@@ -6,23 +6,20 @@
 #include "Transform.h"
 #include "Vector3.h"
 
-namespace EShape
+enum class EShapeType
 {
-    enum Type
-    {
-        Sphere,
-        Box
-    };
-}
+    Sphere,
+    Box
+};
 
 struct Shape
 {
     Transform localTM;
     Vector3 invInertia;
     float invMass;
-    EShape::Type type;
+    EShapeType type;
 
-    Shape(const Transform& inLocalTM, EShape::Type inType)
+    Shape(const Transform& inLocalTM, EShapeType inType)
         : localTM(inLocalTM)
         , invInertia(Vector3(1.f))
         , invMass(1.f)
@@ -30,17 +27,17 @@ struct Shape
     {
     }
 
-    template <typename T> const T& as() const { assert(T::ShapeType == type); return *static_cast<const T*>(this); }
-    template <typename T> T& as() { assert(T::ShapeType == type); return *static_cast<T*>(this); }
+    template <typename T> const T& as() const { assert(T::shapeType == type); return *static_cast<const T*>(this); }
+    template <typename T> T& as() { assert(T::shapeType == type); return *static_cast<T*>(this); }
 };
 
 struct Sphere : public Shape
 {
-    enum {ShapeType = EShape::Sphere};
+    static const EShapeType shapeType = EShapeType::Sphere;
 
     Sphere(float inRadius, const Transform& inLocalTM )
         : radius(inRadius)
-        , Shape(inLocalTM, EShape::Sphere)
+        , Shape(inLocalTM, shapeType)
     {
     }
 
@@ -49,11 +46,11 @@ struct Sphere : public Shape
 
 struct Box : public Shape
 {
-    enum {ShapeType = EShape::Box};
+    static const EShapeType shapeType = EShapeType::Box;
 
     Box(const Vector3& inHalfExtents, const Transform& inLocalTM )
         : halfExtents(inHalfExtents)
-        , Shape(inLocalTM, EShape::Box)
+        , Shape(inLocalTM, shapeType)
     {
     }
 
@@ -72,11 +69,11 @@ union ShapeUnion
     const Shape& asShape() const { return shape; }
     Shape& asShape() { return shape; }
 
-    const Sphere& asSphere() const { assert(EShape::Sphere == shape.type); return sphere; }
-    Sphere& asSphere() { assert(EShape::Sphere == shape.type); return sphere; }
+    const Sphere& asSphere() const { assert(EShapeType::Sphere == shape.type); return sphere; }
+    Sphere& asSphere() { assert(EShapeType::Sphere == shape.type); return sphere; }
 
-    const Box& asBox() const { assert(EShape::Box == shape.type); return box; }
-    Box& asBox() { assert(EShape::Box == shape.type); return box; }
+    const Box& asBox() const { assert(EShapeType::Box == shape.type); return box; }
+    Box& asBox() { assert(EShapeType::Box == shape.type); return box; }
 };
 
 inline void renderShape(const Shape& shape, const Transform& poseTM, Renderer& renderer)
@@ -84,7 +81,7 @@ inline void renderShape(const Shape& shape, const Transform& poseTM, Renderer& r
     const Transform worldTM = poseTM * shape.localTM;
     switch(shape.type)
     {
-    case EShape::Sphere: renderer.drawSphere(worldTM.translation, shape.as<Sphere>().radius, 8); break;
+    case EShapeType::Sphere: renderer.drawSphere(worldTM.translation, shape.as<Sphere>().radius, 8); break;
     //case EShapeType::Box: renderer.drawBox(worldTM, shape.as<Box>().halfExtents); break;
     default: assert(false);
     }
