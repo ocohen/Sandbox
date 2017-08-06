@@ -2,7 +2,6 @@
 #define OC_RIGIDBODY_H
 
 #include <vector>
-#include <memory>
 #include "Vector3.h"
 #include "Transform.h"
 #include "Shape.h"
@@ -21,7 +20,7 @@ struct RigidBodyDesc
     float invMass;
     float linearDamping;
     float angularDamping;
-    std::vector<Shape*> shapes;
+    std::vector<ShapeUnion> shapes;
 };
 
 struct RigidBody
@@ -38,11 +37,8 @@ struct RigidBody
         , linearVelocity(0.f, 0.f, 0.f)
         , angularVelocity(0.f, 0.f, 0.f)
         , bodyToWorld(inBodyToWorld)
+        , shapes(rigidBodyDesc.shapes)
     {
-        for(Shape* shape : rigidBodyDesc.shapes)
-        {
-            shapes.push_back(std::shared_ptr<Shape>(shape->clone()));
-        }
     }
 
     Vector3 invInertia;
@@ -54,7 +50,7 @@ struct RigidBody
 	Vector3 angularVelocity;
 	Transform bodyToWorld;
 
-    std::vector<std::shared_ptr<Shape>> shapes;   //super hacky and need shared_ptr :(
+    std::vector<ShapeUnion> shapes;
 };
 
 #endif

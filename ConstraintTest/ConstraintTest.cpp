@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
 
     PhysWorld physWorld(Vector3(0.f, -98.1f, 0.f));
     RigidBodyDesc simpleBody;
-    simpleBody.shapes.push_back(new Sphere(5.f, Transform(Vector3(0.f), Quaternion(0.f, 0.f, 0.f, 1.f))));
+    simpleBody.shapes.push_back(Sphere(5.f, Transform(Vector3(0.f), Quaternion(0.f, 0.f, 0.f, 1.f))));
     simpleBody.linearDamping = 0.2f;
 
     const int numBodies = 9;
@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
     RigidBodyDesc kinematicBody;
     kinematicBody.invMass = 0.f;
     kinematicBody.invInertia = Vector3(0.f, 0.f, 0.f);
-    kinematicBody.shapes.push_back(new Sphere(5.f, Transform(Vector3(0.f), Quaternion(0.f, 0.f, 0.f, 1.f))));
+    kinematicBody.shapes.push_back(Sphere(5.f, Transform(Vector3(0.f), Quaternion(0.f, 0.f, 0.f, 1.f))));
 
     int kinBodyIdx = physWorld.createRigidBody(Transform(Vector3(0.f, 40.f, 0.f), Quaternion(0.f, 0.f, 0.f, 1.f)), kinematicBody);
     RigidBody& kinBody = physWorld.getBody(kinBodyIdx);

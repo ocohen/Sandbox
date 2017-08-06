@@ -32,8 +32,6 @@ struct Shape
 
     template <typename T> const T& as() const { assert(T::ShapeType == type); return *static_cast<const T*>(this); }
     template <typename T> T& as() { assert(T::ShapeType == type); return *static_cast<T*>(this); }
-
-    virtual Shape* clone() const = 0;
 };
 
 struct Sphere : public Shape
@@ -45,8 +43,6 @@ struct Sphere : public Shape
         , Shape(inLocalTM, EShape::Sphere)
     {
     }
-
-    Shape* clone() const { return new Sphere(*this); }
 
     float radius;
 };
@@ -61,9 +57,26 @@ struct Box : public Shape
     {
     }
 
-    Shape* clone() const { return new Box(*this); }
-
     Vector3 halfExtents;
+};
+
+union ShapeUnion
+{
+    Shape shape;
+    Sphere sphere;
+    Box box;
+
+    ShapeUnion(Sphere inSphere) : sphere(inSphere){}
+    ShapeUnion(Box inBox) : box(inBox){}
+
+    const Shape& asShape() const { return shape; }
+    Shape& asShape() { return shape; }
+
+    const Sphere& asSphere() const { assert(EShape::Sphere == shape.type); return sphere; }
+    Sphere& asSphere() { assert(EShape::Sphere == shape.type); return sphere; }
+
+    const Box& asBox() const { assert(EShape::Box == shape.type); return box; }
+    Box& asBox() { assert(EShape::Box == shape.type); return box; }
 };
 
 inline void renderShape(const Shape& shape, const Transform& poseTM, Renderer& renderer)
