@@ -3,8 +3,8 @@
 
 #include <cmath>
 
-#define OC_EPSILON 1e-8
-#define OC_BIG_EPSILON 1e-4
+#define OC_EPSILON 1e-8f
+#define OC_BIG_EPSILON 1e-4f
 #define OC_EPSILON_DOUBLE 1e-16
 #define OC_BIG_EPSILON_DOUBLE 1e-8
 #define PI 3.14159265359f

@@ -84,6 +84,22 @@ struct VectorOps : public EqualOps<T>
         return std::sqrt(length2());
     }
 
+    T getSafeNormal() const
+    {
+        const Scaler oldLength = length();
+        if(oldLength < OC_EPSILON)
+        {
+            T ret;
+            for(int i=0; i<T::order; ++i)
+            {
+                ret[i] = (Scaler)0;
+            }
+            return ret;
+        }
+
+        return getNormal();
+    }
+
     T getNormal() const
     {
         const Scaler oneOver = 1.f / length();

@@ -28,6 +28,17 @@ struct TTransform
         return TTransform<Scaler>( translation + (rotation * rhs.translation), rotation * rhs.rotation);
     }
 
+    //We can't get a pure inverse because we'd have to change the order of operations (need to undo translation and then undo rotation)
+    //We can do this: X = A.inv() * B so that XA = B.
+    TTransform<Scaler> inverseTransform(const TTransform<Scaler>& rhs) const
+    {
+        //Relative * this = rhs => Relative.translation + (Relative.rotation * this.translation) = rhs.translation
+        //Relative * this = rhs => Relative.rotation * this.rotation = rhs.rotation
+        const TQuaternion<Scaler> relativeRotation = rhs.rotation * rotation.getInverse();
+        const TVector3<Scaler> relativeTranslation = rhs.translation - (relativeRotation * translation);
+        return TTransform<Scaler>(relativeTranslation, relativeRotation);
+    }
+
 	TVector3<Scaler> translation;
 	TQuaternion<Scaler> rotation;
 };

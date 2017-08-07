@@ -25,7 +25,7 @@ struct TQuaternion : private VectorOps<TQuaternion<Scaler>, Scaler>
         const Scaler halfHangle = angle * static_cast<Scaler>(0.5);
         const Scaler sinHalfAngle = std::sin(halfHangle);
         const Scaler cosHalfAngle = std::cos(halfHangle);
-        return TQuaternion(axis * sinHalfAngle, cosHalfAngle);
+        return TQuaternion(axis.getSafeNormal() * sinHalfAngle, cosHalfAngle);
     }
 
     void toAxisAngle(TVector3<Scaler>& outAxis, Scaler& angle) const
@@ -45,7 +45,7 @@ struct TQuaternion : private VectorOps<TQuaternion<Scaler>, Scaler>
 
     TVector3<Scaler> rotateVector(const TVector3<Scaler>& R) const
     {
-        //http://people.csail.mit.edu/bkph/articles/TQuaternions.pdf
+        //http://people.csail.mit.edu/bkph/articles/Quaternions.pdf
         const TVector3<Scaler>& Q = imaginary;
         const Scaler q = real;
         return  R + static_cast<Scaler>(2.0)*q*Vector3::crossProduct(Q,R) + TVector3<Scaler>::crossProduct(static_cast<Scaler>(2.0)*Q, Vector3::crossProduct(Q,R));
@@ -58,7 +58,7 @@ struct TQuaternion : private VectorOps<TQuaternion<Scaler>, Scaler>
 
     TQuaternion operator*(const TQuaternion& rhs) const
     {
-        //http://people.csail.mit.edu/bkph/articles/TQuaternions.pdf
+        //http://people.csail.mit.edu/bkph/articles/Quaternions.pdf
         const TVector3<Scaler>& P = imaginary;
         const TVector3<Scaler>& Q = rhs.imaginary;
         const Scaler p = real;
