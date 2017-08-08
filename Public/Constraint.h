@@ -7,18 +7,6 @@
 
 struct Constraint
 {
-    Constraint()
-        : body1(nullptr)
-        , body2(nullptr)
-        , invMassScale1(1.f)
-        , invMassScale2(1.f)
-        , invInertiaScale1(1.f)
-        , invInertiaScale2(1.f)
-        , linearProjection(FLT_MAX)
-		, distance(0.f)
-    {
-    }
-
     //for now just a simple distance constraint. This is super hacky
     RigidBody* body1;
     RigidBody* body2;

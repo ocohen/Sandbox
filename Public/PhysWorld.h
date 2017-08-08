@@ -2,7 +2,7 @@
 #define OC_PHYSWORLD_H
 
 #include <vector>
-#include "RigidBody.h"
+#include "RigidActor.h"
 #include "Constraint.h"
 #include "Renderer.h"
 #include "Float3.h"
@@ -15,11 +15,25 @@ public:
     {
     }
 
+    ~PhysWorld()
+    {
+        for(Constraint* constraint : constraints)
+        {
+            delete constraint;
+        }
+
+        for(RigidActor* actor : actors)
+        {
+            delete actor;
+        }
+    }
+
 	void simulate(float deltaTime)
     {
         //integrate unbounded velocities
-        for(RigidBody& rb : bodies)
+        for(RigidActor* actor : actors)
         {
+            RigidBody& rb = actor->body;
             if(rb.invMass > 0.f)
             {
                 rb.linearVelocity += gravity * deltaTime;
@@ -33,16 +47,17 @@ public:
         //solve constraints
         for(int itr = 0; itr < 4; ++itr)
         {
-            for (Constraint& constraint : constraints)
+            for (Constraint* constraint : constraints)
             {
-                constraint.solveConstraint(invDeltaTime);
+                constraint->solveConstraint(invDeltaTime);
             }
         }
         
 
         //integrate position and apply damping
-        for (RigidBody& rb : bodies)
+        for (RigidActor* actor: actors)
         {
+            RigidBody& rb = actor->body;
             if (rb.invMass > 0.f)
             {
                 //const Float3 linVelScalers = rb.linearVelocity.asScalers<Float3>();
@@ -54,25 +69,25 @@ public:
         }
     }
 
-    int createRigidBody(const Transform& bodyToWorld, const RigidBodyDesc& rigidBodyDesc)
+    int createRigidActor(const Transform& bodyToWorld, const RigidBodyDesc& rigidBodyDesc)
     {
-        const int ret = (int)bodies.size();
-        bodies.emplace_back(bodyToWorld, rigidBodyDesc);
+        const int ret = (int)actors.size();
+        actors.push_back(new RigidActor(bodyToWorld, rigidBodyDesc));
         return ret;
     }
 
-    int createConstraint(int body1, int body2)
+    int createConstraint(int actor1, int actor2)
     {
-        constraints.emplace_back(&bodies[body1], &bodies[body2]);
+        constraints.push_back(new Constraint(&actors[actor1]->body, &actors[actor2]->body));
         return (int)constraints.size() - 1;
     }
 
-    RigidBody& getBody(int idx) { return bodies[idx]; }
-    Constraint& getConstraint(int idx){ return constraints[idx]; }
+    RigidActor* getActor(int idx) { return actors[idx]; }
+    Constraint* getConstraint(int idx){ return constraints[idx]; }
 
 private:
-	std::vector<RigidBody> bodies;
-    std::vector<Constraint> constraints;
+	std::vector<RigidActor*> actors;
+    std::vector<Constraint*> constraints;
     Vector3 gravity;
     friend class PhysWorldDebugger;
 };
@@ -88,14 +103,15 @@ public:
 
     void debugDraw() const
     {
-        for(const RigidBody& rigidBody : world.bodies)
+        for(const RigidActor* actor : world.actors)
         {
-            renderer.drawOrientedCircles(rigidBody.bodyToWorld, 3.f, 16, 2.f);
-            renderer.drawCross(rigidBody.bodyToWorld, 3.f, 2.f);
+            const RigidBody& body = actor->body;
+            renderer.drawOrientedCircles(body.bodyToWorld, 3.f, 16, 2.f);
+            renderer.drawCross(body.bodyToWorld, 3.f, 2.f);
 
-            for(const ShapeUnion& shapeUnion : rigidBody.shapes)
+            for(const ShapeUnion& shapeUnion : body.shapes)
             {
-                renderShape(shapeUnion.asShape(), rigidBody.bodyToWorld, renderer);
+                renderShape(shapeUnion.asShape(), body.bodyToWorld, renderer);
             }
         }
     }

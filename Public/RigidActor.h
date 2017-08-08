@@ -1,22 +1,23 @@
 #ifndef OC_RIGIDACTOR_H
 #define OC_RIGIDACTOR_H
 
+#include "RigidBody.h"
+
 class RigidActor
 {
 public:
-    RigidActor(const Transform& worldTM, const RigidBodyDesc& rigidBodyDesc)
-    :rigidBody(worldTM, rigidBodyDesc)
+    RigidActor(const Transform& worldTM, const RigidBodyDesc& bodyDesc)
+    :body(worldTM, bodyDesc)
     {
-        bodyLocalTM = rigidBody.bodyToWorld.relativeTo(worldTM);
+        bodyLocalTM = body.bodyToWorld.inverseTransform(worldTM);
     }
 
     Transform getWorldTransform() const
     {
-        return rigidBody.bodyToWorld * bodyLocalTM;
+        return body.bodyToWorld * bodyLocalTM;
     }
 
-private:
-    RigidBody rigidBody;
+    RigidBody body;
     Transform bodyLocalTM;  //worldTM = bodyToWorld * bodyLocalTM
 };
 

@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
 
     for(int i=-numBodies+1; i<0; ++i)
     {
-        physWorld.createRigidBody(Transform(Vector3(i * 10.f, 40.f, 0.f), Quaternion(0.f, 0.f, 0.f, 1.f)), simpleBody);
+        physWorld.createRigidActor(Transform(Vector3(i * 10.f, 40.f, 0.f), Quaternion(0.f, 0.f, 0.f, 1.f)), simpleBody);
     }
 
     RigidBodyDesc kinematicBody;
@@ -33,8 +33,8 @@ int main(int argc, char *argv[])
     kinematicBody.invInertia = Vector3(0.f, 0.f, 0.f);
     kinematicBody.shapes.push_back(Sphere(5.f, Transform(Vector3(0.f), Quaternion(0.f, 0.f, 0.f, 1.f))));
 
-    int kinBodyIdx = physWorld.createRigidBody(Transform(Vector3(0.f, 40.f, 0.f), Quaternion(0.f, 0.f, 0.f, 1.f)), kinematicBody);
-    RigidBody& kinBody = physWorld.getBody(kinBodyIdx);
+    int kinBodyIdx = physWorld.createRigidActor(Transform(Vector3(0.f, 40.f, 0.f), Quaternion(0.f, 0.f, 0.f, 1.f)), kinematicBody);
+    //RigidBody& kinBody = physWorld.getBody(kinBodyIdx);
 
     for(int i=0; i<numBodies-1; ++i)
     {
