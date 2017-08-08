@@ -35,6 +35,7 @@ public:
     //tris is just an index buffer, but we treat it as triangles (num indices = numTris * 3)
     void drawMesh(const Vector3* vertices, const unsigned short* tris, int numTris, const Vector3* color = 0, bool solid=true, float thickness =1.f);
     void drawSphere(const Vector3& center, float radius, int numSections=16, const Vector3* color = 0, float thickness=1.f);
+    void drawBox(const Transform& tm, const Vector3& halfExtents, const Vector3* color = 0, float thickness=1.f);
     void setCameraPosition(const Vector3& eye);
     void setCameraLookAt(const Vector3& eye, const Vector3& target, const Vector3& up);
     void setCameraLense(float angleFOV, float nearPlane=1.f, float farPlane=1000.f);
@@ -271,6 +272,36 @@ inline void Renderer::drawSphere(const Vector3& center, float radius, int numSec
         }
         
     }
+}
+
+void Renderer::drawBox(const Transform& tm, const Vector3& halfExtentsLocal, const Vector3* color, float thickness)
+{
+    const Vector3 halfExtents = tm.transformVector(halfExtentsLocal);
+    const Vector3 center = tm.translation;
+    //verts
+    Vector3 tbl = center - halfExtents;
+    Vector3 tbr = tbl + Vector3(halfExtents.x,0.f, 0.f);
+    Vector3 tfl = tbl + Vector3(0.f, halfExtents.y,0.f);
+    Vector3 tfr = tbl + Vector3(halfExtents.x, halfExtents.y,0.f);
+    Vector3 bfr = center + halfExtents;
+    Vector3 bfl = bfr - Vector3(halfExtents.x, 0.f, 0.f);
+    Vector3 bbl = bfr - Vector3(halfExtents.x, halfExtents.y, 0.f);
+    Vector3 bbr = bfr - Vector3(0.f, halfExtents.y, 0.f);
+
+    drawLine(tbl, tbr, color, thickness);
+    drawLine(tbr, tfr, color, thickness);
+    drawLine(tfr, tfl, color, thickness);
+    drawLine(tfl, tbl, color, thickness);
+
+    drawLine(bbl, bbr, color, thickness);
+    drawLine(bbr, bfr, color, thickness);
+    drawLine(bfr, bfl, color, thickness);
+    drawLine(bfl, bbl, color, thickness);
+
+    drawLine(tbl, bbl, color, thickness);
+    drawLine(tbr, bbr, color, thickness);
+    drawLine(tfl, bfl, color, thickness);
+    drawLine(tfr, bfr, color, thickness);
 }
 
 inline void Renderer::flush()

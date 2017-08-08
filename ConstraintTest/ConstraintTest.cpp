@@ -17,15 +17,20 @@ int main(int argc, char *argv[])
     renderer.setCameraLookAt(cameraPosition, target, up);
 
     PhysWorld physWorld(Vector3(0.f, -98.1f, 0.f));
-    RigidBodyDesc simpleBody;
-    simpleBody.shapes.push_back(Sphere(5.f, Transform(Vector3(0.f), Quaternion(0.f, 0.f, 0.f, 1.f))));
-    simpleBody.linearDamping = 0.2f;
+    RigidBodyDesc bodyDescs[2];
+    RigidBodyDesc& simpleBodySphere = bodyDescs[0];
+    simpleBodySphere.shapes.push_back(Sphere(5.f, Transform(Vector3(0.f), Quaternion(0.f, 0.f, 0.f, 1.f))));
+    simpleBodySphere.linearDamping = 0.2f;
+
+    RigidBodyDesc& simpleBodyBox = bodyDescs[1];
+    simpleBodyBox.shapes.push_back(Box(Vector3(5.f, 5.f, 5.f), Transform(Vector3(0.f), Quaternion(0.f, 0.f, 0.f, 1.f))));
+    simpleBodyBox.linearDamping = 0.2f;
 
     const int numBodies = 9;
 
     for(int i=-numBodies+1; i<0; ++i)
     {
-        physWorld.createRigidActor(Transform(Vector3(i * 10.f, 40.f, 0.f), Quaternion(0.f, 0.f, 0.f, 1.f)), simpleBody);
+        physWorld.createRigidActor(Transform(Vector3(i * 10.f, 40.f, 0.f), Quaternion(0.f, 0.f, 0.f, 1.f)), bodyDescs[abs(i)%2]);
     }
 
     RigidBodyDesc kinematicBody;
