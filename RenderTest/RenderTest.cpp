@@ -49,6 +49,7 @@ int main(int argc, char *argv[])
         renderer.drawMesh(vertices, indices, sizeof(indices) / (sizeof(short) * 3), &green, false, 2);
         renderer.drawOrientedCircles(circlesTM, .3f, 16, 3.f);
         renderer.drawCross(circlesTM, .6f, 3.f);
+        renderer.drawBox(Transform(Vector3(0.f, 0.f, 0.f), Quaternion(0.f,0.f,0.f,1.f)), Vector3(0.3f, 0.3f, 0.3f)); 
         renderer.flush();
 
         SDL_GL_SwapWindow(displayWindow);

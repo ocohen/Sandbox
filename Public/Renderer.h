@@ -280,13 +280,13 @@ void Renderer::drawBox(const Transform& tm, const Vector3& halfExtentsLocal, con
     const Vector3 center = tm.translation;
     //verts
     Vector3 tbl = center - halfExtents;
-    Vector3 tbr = tbl + Vector3(halfExtents.x,0.f, 0.f);
-    Vector3 tfl = tbl + Vector3(0.f, halfExtents.y,0.f);
-    Vector3 tfr = tbl + Vector3(halfExtents.x, halfExtents.y,0.f);
+    Vector3 tbr = tbl + Vector3(halfExtents.x*2.f,0.f, 0.f);
+    Vector3 tfl = tbl + Vector3(0.f, halfExtents.y*2.f,0.f);
+    Vector3 tfr = tbl + Vector3(halfExtents.x*2.f, halfExtents.y*2.f,0.f);
     Vector3 bfr = center + halfExtents;
-    Vector3 bfl = bfr - Vector3(halfExtents.x, 0.f, 0.f);
-    Vector3 bbl = bfr - Vector3(halfExtents.x, halfExtents.y, 0.f);
-    Vector3 bbr = bfr - Vector3(0.f, halfExtents.y, 0.f);
+    Vector3 bfl = bfr - Vector3(halfExtents.x*2.f, 0.f, 0.f);
+    Vector3 bbl = bfr - Vector3(halfExtents.x*2.f, halfExtents.y*2.f, 0.f);
+    Vector3 bbr = bfr - Vector3(0.f, halfExtents.y*2.f, 0.f);
 
     drawLine(tbl, tbr, color, thickness);
     drawLine(tbr, tfr, color, thickness);
