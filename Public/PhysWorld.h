@@ -5,6 +5,7 @@
 #include "RigidActor.h"
 #include "Constraint.h"
 #include "Renderer.h"
+#include "ShapeRenderer.h"
 #include "Float3.h"
 
 class PhysWorld

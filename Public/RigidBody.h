@@ -23,6 +23,24 @@ struct RigidBodyDesc
     std::vector<ShapeUnion> shapes;
 };
 
+inline float computeVolume(const ShapeUnion& shapeUnion)
+{
+    switch(shapeUnion.shape.type)
+    {
+        case EShapeType::Sphere:
+        {
+            const float radius = shapeUnion.asSphere().radius;
+            return (4.f / 3.f) * radius * radius * radius * PI;
+        }
+        case EShapeType::Box:
+        {
+            const Box& box = shapeUnion.asBox();
+            return box.halfExtents.x * box.halfExtents.y * box.halfExtents.z * 8.f;
+        }
+        default: assert(false); return 0.f;
+    }
+}
+
 struct RigidBody
 {
     RigidBody()
