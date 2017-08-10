@@ -8,7 +8,7 @@ include_directories(${CMAKE_SOURCE_DIR}/../External)
 
 set(ConstraintSource ConstraintTest.cpp)
 set(PhysTestSource PhysUnitTest.cpp)
-set(Headers ../Public/ShapeRenderer.h ../Public/RigidActor.h ../Public/PhysWorld.h ../Public/RigidBody.h ../Public/Shape.h ../Public/Constraint.h ../Public/OCMath.h ../Public/Float3.h ../Public/VectorOps.h ../Public/EqualOps.h ../Public/PairwiseOps.h ../Public/Vector3.h ../Public/OCMath.h ../Public/Renderer.h ../Public/Scaler3.h ../Public/Float3.h ../Public/TVector3.h ../Public/Transform.h ../Public/Quaternion.h)
+set(Headers ../Public/MassProperties.h ../Public/ShapeRenderer.h ../Public/RigidActor.h ../Public/PhysWorld.h ../Public/RigidBody.h ../Public/Shape.h ../Public/Constraint.h ../Public/OCMath.h ../Public/Float3.h ../Public/VectorOps.h ../Public/EqualOps.h ../Public/PairwiseOps.h ../Public/Vector3.h ../Public/OCMath.h ../Public/Renderer.h ../Public/Scaler3.h ../Public/Float3.h ../Public/TVector3.h ../Public/Transform.h ../Public/Quaternion.h)
 
 #OpenGL
 find_package(OpenGL)

@@ -48,7 +48,7 @@ struct TQuaternion : private VectorOps<TQuaternion<Scaler>, Scaler>
         //http://people.csail.mit.edu/bkph/articles/Quaternions.pdf
         const TVector3<Scaler>& Q = imaginary;
         const Scaler q = real;
-        return  R + static_cast<Scaler>(2.0)*q*Vector3::crossProduct(Q,R) + TVector3<Scaler>::crossProduct(static_cast<Scaler>(2.0)*Q, Vector3::crossProduct(Q,R));
+        return  R + static_cast<Scaler>(2.0)*q*TVector3<Scaler>::crossProduct(Q,R) + TVector3<Scaler>::crossProduct(static_cast<Scaler>(2.0)*Q, TVector3<Scaler>::crossProduct(Q,R));
     }
 
     TVector3<Scaler> operator*(const TVector3<Scaler>& R) const
