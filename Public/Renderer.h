@@ -277,16 +277,19 @@ inline void Renderer::drawSphere(const Vector3& center, float radius, int numSec
 void Renderer::drawBox(const Transform& tm, const Vector3& halfExtentsLocal, const Vector3* color, float thickness)
 {
     const Vector3 halfExtents = tm.transformVector(halfExtentsLocal);
+    const Vector3 xExtent = tm.transformVector(Vector3(2.f * halfExtentsLocal.x, 0.f, 0.f));
+    const Vector3 yExtent = tm.transformVector(Vector3(0.f, 2.f * halfExtentsLocal.y, 0.f));
+    const Vector3 zExtent = tm.transformVector(Vector3(0.f, 0.f, 2.f * 2.f * halfExtentsLocal.z));
     const Vector3 center = tm.translation;
     //verts
     Vector3 tbl = center - halfExtents;
-    Vector3 tbr = tbl + Vector3(halfExtents.x*2.f,0.f, 0.f);
-    Vector3 tfl = tbl + Vector3(0.f, halfExtents.y*2.f,0.f);
-    Vector3 tfr = tbl + Vector3(halfExtents.x*2.f, halfExtents.y*2.f,0.f);
+    Vector3 tbr = tbl + xExtent;
+    Vector3 tfl = tbl + yExtent;
+    Vector3 tfr = tbl + xExtent + yExtent;
     Vector3 bfr = center + halfExtents;
-    Vector3 bfl = bfr - Vector3(halfExtents.x*2.f, 0.f, 0.f);
-    Vector3 bbl = bfr - Vector3(halfExtents.x*2.f, halfExtents.y*2.f, 0.f);
-    Vector3 bbr = bfr - Vector3(0.f, halfExtents.y*2.f, 0.f);
+    Vector3 bfl = bfr - xExtent;
+    Vector3 bbl = bfr - xExtent - yExtent;
+    Vector3 bbr = bfr - yExtent;
 
     drawLine(tbl, tbr, color, thickness);
     drawLine(tbr, tfr, color, thickness);

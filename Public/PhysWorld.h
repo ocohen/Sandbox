@@ -65,6 +65,14 @@ public:
                 //rb.linearVelocity = rb.linearVelocity - Vector3(linVelScalers * linVelScalers) * rb.linearDamping;
                 rb.linearVelocity = rb.linearVelocity - 0.0001f * Vector3(sign(rb.linearVelocity.x) * rb.linearVelocity.x*rb.linearVelocity.x, sign(rb.linearVelocity.y) * rb.linearVelocity.y*rb.linearVelocity.y, sign(rb.linearVelocity.z) * rb.linearVelocity.z*rb.linearVelocity.z) * rb.linearDamping;
                 rb.bodyToWorld.translation += rb.linearVelocity * deltaTime;
+                //rb.bodyToWorld.rotation = 0.5f * deltaTime * Quaternion(rb.angularVelocity) * rb.bodyToWorld.rotation;
+                float angle = 0.f;
+                Vector3 rotationAxis = rb.angularVelocity.getSafeNormal();
+                if(isNearlyEqual(rotationAxis.length(), 1.f))
+                {
+                    angle = rb.angularVelocity.length();
+                }
+                rb.bodyToWorld.rotation = Quaternion::fromAxisAndAngle(rotationAxis, angle * deltaTime) * rb.bodyToWorld.rotation;    //this is lame, should use quat differentation
                 //todo: angular velocity
             }
         }
@@ -74,6 +82,7 @@ public:
     {
         const int ret = (int)actors.size();
         actors.push_back(new RigidActor(bodyToWorld, rigidBodyDesc));
+        actors[ret]->body.angularVelocity = Vector3(PI, 0.f, 0.f);
         return ret;
     }
 
