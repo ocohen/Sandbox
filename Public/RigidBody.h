@@ -5,6 +5,7 @@
 #include "Vector3.h"
 #include "Transform.h"
 #include "Shape.h"
+#include "MassProperties.h"
 
 struct RigidBodyDesc
 {
@@ -27,10 +28,6 @@ struct RigidBodyDesc
 
 struct RigidBody
 {
-    RigidBody()
-    {
-    }
-
     RigidBody(const Transform& inBodyToWorld, const RigidBodyDesc& rigidBodyDesc)
         : invInertia(rigidBodyDesc.invInertia)
         , invMass(rigidBodyDesc.invMass)
@@ -41,6 +38,13 @@ struct RigidBody
         , bodyToWorld(inBodyToWorld)
         , shapes(rigidBodyDesc.shapes)
     {
+        MassProperties props;
+        for(const ShapeUnion& shapeUnion : rigidBodyDesc.shapes)
+        {
+            props.addShape(shapeUnion, 1.f);
+        }
+
+        bodyToWorld.translation += props.com;
     }
 
     Vector3 invInertia;

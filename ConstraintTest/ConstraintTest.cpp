@@ -22,11 +22,12 @@ int main(int argc, char *argv[])
     simpleBodySphere.shapes.push_back(Sphere(5.f, Transform(Vector3(0.f), Quaternion(0.f, 0.f, 0.f, 1.f))));
     simpleBodySphere.linearDamping = 0.2f;
 
-    RigidBodyDesc& simpleBodyBox = bodyDescs[1];
-    simpleBodyBox.shapes.push_back(Box(Vector3(5.f, 5.f, 5.f), Transform(Vector3(0.f), Quaternion(0.f, 0.f, 0.f, 1.f))));
-    simpleBodyBox.linearDamping = 0.2f;
+    RigidBodyDesc& compoundBody = bodyDescs[1];
+    compoundBody.shapes.push_back(Box(Vector3(5.f, 5.f, 5.f), Transform(Vector3(0.f), Quaternion(0.f, 0.f, 0.f, 1.f))));
+    compoundBody.shapes.push_back(Box(Vector3(5.f, 5.f, 5.f), Transform(Vector3(120.f, 0.f, 0.f), Quaternion(0.f, 0.f, 0.f, 1.f))));
+    compoundBody.linearDamping = 0.2f;
 
-    const int numBodies = 9;
+    const int numBodies = 3;
 
     for(int i=-numBodies+1; i<0; ++i)
     {
@@ -63,7 +64,7 @@ int main(int argc, char *argv[])
 
         const float deltaTime = 1/60.f;
 
-        physWorld.simulate(deltaTime);
+        //physWorld.simulate(deltaTime);
         //kinBody.bodyToWorld.translation.y = 0.f;//sin(r) * 20.f;
         //kinBody.bodyToWorld.translation.x = 50.f + cos(r) * 20.f;
         //r += deltaTime;

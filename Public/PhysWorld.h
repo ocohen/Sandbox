@@ -82,7 +82,7 @@ public:
     {
         const int ret = (int)actors.size();
         actors.push_back(new RigidActor(bodyToWorld, rigidBodyDesc));
-        actors[ret]->body.angularVelocity = Vector3(PI, 0.f, 0.f);
+        //actors[ret]->body.angularVelocity = Vector3(PI, 0.f, 0.f);
         return ret;
     }
 
@@ -116,8 +116,9 @@ public:
         for(const RigidActor* actor : world.actors)
         {
             const RigidBody& body = actor->body;
-            renderer.drawOrientedCircles(body.bodyToWorld, 3.f, 16, 2.f);
-            renderer.drawCross(body.bodyToWorld, 3.f, 2.f);
+            const Transform actorTM = actor->getWorldTransform();
+            renderer.drawOrientedCircles(actorTM, 3.f, 16, 2.f);
+            renderer.drawCross(actorTM, 3.f, 2.f);
 
             for(const ShapeUnion& shapeUnion : body.shapes)
             {
