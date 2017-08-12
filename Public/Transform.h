@@ -29,13 +29,15 @@ struct TTransform
     }
 
     //We can't get a pure inverse because we'd have to change the order of operations (need to undo translation and then undo rotation)
-    //We can do this: X = A.inv() * B so that XA = B.
+    //We can do this: X = A.inv() * B so that AX = A(A.Inv())B = B.
     TTransform<Scaler> inverseTransform(const TTransform<Scaler>& rhs) const
     {
-        //Relative * this = rhs => Relative.translation + (Relative.rotation * this.translation) = rhs.translation
-        //Relative * this = rhs => Relative.rotation * this.rotation = rhs.rotation
-        const TQuaternion<Scaler> relativeRotation = rhs.rotation * rotation.getInverse();
-        const TVector3<Scaler> relativeTranslation = rhs.translation - (relativeRotation * translation);
+        //this * Relative = rhs => this.translation + (this.rotation * Relative.translation) = rhs.translation
+        //this * Relative = rhs => this.rotation * Relative.rotation = rhs.rotation
+        const TQuaternion<Scaler> invRotation = rotation.getInverse();
+        const TVector3<Scaler> relativeTranslation = invRotation * (rhs.translation - translation);
+        const TQuaternion<Scaler> relativeRotation = invRotation * rhs.rotation;
+        
         return TTransform<Scaler>(relativeTranslation, relativeRotation);
     }
 

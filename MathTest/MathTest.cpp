@@ -163,7 +163,7 @@ TEST_CASE("Transform", "[math]")
 
         const Transform b(Vector3(10.f, 11.f, 12.f), Quaternion::fromAxisAndAngle(Vector3(0.f, 0.f, 1.f), -PI));
         const Transform c = a.inverseTransform(b);
-        const Transform d = c * a;
+        const Transform d = a * c;
         REQUIRE(Vector3::isNearlyEqual(d.translation, b.translation));
         REQUIRE(Quaternion::isNearlyEqual(d.rotation, b.rotation));
     }
