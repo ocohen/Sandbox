@@ -115,14 +115,16 @@ public:
     {
         for(const RigidActor* actor : world.actors)
         {
-            const RigidBody& body = actor->body;
+            const std::vector<ShapeUnion>& shapes = actor->getShapes();
             const Transform actorTM = actor->getWorldTransform();
-            renderer.drawOrientedCircles(actorTM, 3.f, 16, 2.f);
+            const Transform bodyTM = actor->getBodyToWorld();
+
+            renderer.drawOrientedCircles(bodyTM, 3.f, 16, 2.f);
             renderer.drawCross(actorTM, 3.f, 2.f);
 
-            for(const ShapeUnion& shapeUnion : body.shapes)
+            for(const ShapeUnion& shapeUnion : shapes)
             {
-                renderShape(shapeUnion.asShape(), body.bodyToWorld, renderer);
+                renderShape(shapeUnion.asShape(), bodyTM, renderer);
             }
         }
     }

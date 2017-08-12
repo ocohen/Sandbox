@@ -2,6 +2,7 @@
 #include "catch.hpp"
 
 #include "MassProperties.h"
+#include "RigidActor.h"
 
 TEST_CASE("MassProperties", "[physics]")
 {
@@ -25,4 +26,19 @@ TEST_CASE("MassProperties", "[physics]")
     massProps.addShape(box, 2.f);
     REQUIRE(isNearlyEqual(massProps.mass, 1898.9733529f));
     REQUIRE(Vector3::isNearlyEqual(massProps.com, Vector3(5.95570944774f,4.0442905174f,0.f)));
+}
+
+TEST_CASE("RigidActor", "[physics]")
+{
+    const Vector3 actorLocation(10.f, 11.f, 12.f);
+    const Quaternion actorRotation = Quaternion::fromAxisAndAngle(Vector3(0.f, 0.f, 1.f), PI_OVER_TWO);
+    const Transform actorTM(actorLocation, actorRotation);
+
+    RigidBodyDesc desc;
+    desc.shapes.push_back(Sphere(5.f, Transform(Vector3(0.f), Quaternion(0.f, 0.f, 0.f, 1.f))));
+    desc.shapes.push_back(Sphere(5.f, Transform(Vector3(10.f, 0.f, 0.f), Quaternion(0.f, 0.f, 0.f, 1.f))));
+    RigidActor actor(actorTM, desc);;
+
+    REQUIRE(Vector3::isNearlyEqual(actor.getWorldTransform().translation, actorLocation));
+    REQUIRE(Quaternion::isNearlyEqual(actor.getWorldTransform().rotation, actorRotation));
 }

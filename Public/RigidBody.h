@@ -28,14 +28,13 @@ struct RigidBodyDesc
 
 struct RigidBody
 {
-    RigidBody(const Transform& inBodyToWorld, const RigidBodyDesc& rigidBodyDesc)
+    RigidBody(const Transform& actorToWorld, const RigidBodyDesc& rigidBodyDesc)
         : invInertia(rigidBodyDesc.invInertia)
         , invMass(rigidBodyDesc.invMass)
         , linearDamping(rigidBodyDesc.linearDamping)
         , angularDamping(rigidBodyDesc.angularDamping)
         , linearVelocity(0.f, 0.f, 0.f)
         , angularVelocity(0.f, 0.f, 0.f)
-        , bodyToWorld(inBodyToWorld)
         , shapes(rigidBodyDesc.shapes)
     {
         MassProperties props;
@@ -44,7 +43,16 @@ struct RigidBody
             props.addShape(shapeUnion, 1.f);
         }
 
-        bodyToWorld.translation += props.com;
+        const Transform localTM(props.com, Quaternion(0.f, 0.f, 0.f, 1.f)); //TODO: compute inertia tensor
+
+        bodyToWorld = actorToWorld * localTM;
+
+        //need to update shape transforms to be relative to the new body transform. We can use the localTM for this
+        for(ShapeUnion& shapeUnion : shapes)
+        {
+            Transform& shapeTM = shapeUnion.asShape().localTM;
+            shapeTM = localTM.inverseTransform(shapeTM);
+        }
     }
 
     Vector3 invInertia;

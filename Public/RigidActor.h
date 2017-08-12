@@ -17,8 +17,21 @@ public:
         return body.bodyToWorld * bodyLocalTM;
     }
 
+    const std::vector<ShapeUnion>& getShapes() const
+    {
+        return body.shapes;
+    }
+
+private:
+    friend class PhysWorld;
+    friend class PhysWorldDebugger;
     RigidBody body;
     Transform bodyLocalTM;  //worldTM = bodyToWorld * bodyLocalTM
+
+    const Transform& getBodyToWorld() const 
+    {
+        return body.bodyToWorld;
+    }
 };
 
 #endif
