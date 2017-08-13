@@ -80,6 +80,12 @@ struct TQuaternion : private VectorOps<TQuaternion<Scaler>, Scaler>
     using VOps::isNearlyEqual;
 
     friend VOps;
+
+    static const TQuaternion<Scaler>& identity()
+    {
+        static TQuaternion<Scaler> id(Scaler(0), Scaler(0), Scaler(0), Scaler(1));
+        return id;
+    }
 };
 
 typedef TQuaternion<float> Quaternion;

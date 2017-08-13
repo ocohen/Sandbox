@@ -34,6 +34,12 @@ struct TVector3 : public VectorOps<TVector3<Scaler>, Scaler>
     {
         return TVector3(a.y*b.z - a.z*b.y, -(a.x*b.z - a.z*b.x), a.x*b.y - a.y*b.x);
     }
+
+    static const TVector3<Scaler>& identity()
+    {
+        static TVector3<Scaler> id(Scaler(0), Scaler(0), Scaler(0));
+        return id;
+    }
 };
 
 #endif

@@ -43,6 +43,12 @@ struct TTransform
 
 	TVector3<Scaler> translation;
 	TQuaternion<Scaler> rotation;
+
+    static const TTransform<Scaler>& TTransform::identity()
+    {
+        static TTransform<Scaler> id(TVector3<Scaler>::identity(), TQuaternion<Scaler>::identity());
+        return id;
+    }
 };
 
 typedef TTransform<float> Transform;

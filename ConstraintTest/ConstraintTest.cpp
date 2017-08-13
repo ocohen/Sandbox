@@ -23,34 +23,40 @@ int main(int argc, char *argv[])
     simpleBodySphere.linearDamping = 0.2f;
 
     RigidBodyDesc& compoundBody = bodyDescs[1];
-    compoundBody.shapes.push_back(Box(Vector3(5.f), Transform(Vector3(0.f, 12.f, 0.f), Quaternion(0.f, 0.f, 0.f, 1.f))));
+    compoundBody.shapes.push_back(Box(Vector3(5.f), Transform(Vector3(0.f, 0.f, 0.f), Quaternion(0.f, 0.f, 0.f, 1.f))));
     compoundBody.linearDamping = 0.2f;
 
     const int numBodies = 9;
-
-    for(int i=-numBodies+1; i<0; ++i)
-    {
-        physWorld.createRigidActor(Transform(Vector3(i * 10.f, 40.f, 0.f), Quaternion(0.f, 0.f, 0.f, 1.f)), bodyDescs[abs(i)%2]);
-    }
 
     RigidBodyDesc kinematicBody;
     kinematicBody.invMass = 0.f;
     kinematicBody.invInertia = Vector3(0.f, 0.f, 0.f);
     kinematicBody.shapes.push_back(Sphere(5.f, Transform(Vector3(0.f), Quaternion(0.f, 0.f, 0.f, 1.f))));
 
-    int kinBodyIdx = physWorld.createRigidActor(Transform(Vector3(10.f, 40.f, 0.f), Quaternion(0.f, 0.f, 0.f, 1.f)), kinematicBody);
-    //RigidBody& kinBody = physWorld.getBody(kinBodyIdx);
+    int kinBodyIdx = physWorld.createRigidActor(Transform(Vector3(0.f, 40.f, 0.f), Quaternion(0.f, 0.f, 0.f, 1.f)), kinematicBody);
 
     for(int i=0; i<numBodies-1; ++i)
     {
-        physWorld.createConstraint(i, i+1);
+        physWorld.createRigidActor(Transform(Vector3(20.f * (i+1), 40.f, 0.f), Quaternion(0.f, 0.f, 0.f, 1.f)), bodyDescs[1]);
     }
+
+    for(int i=0; i<numBodies-1; ++i)
+    {
+        physWorld.createConstraint(i, Transform::identity(), i+1, Transform(Vector3(-5.f, 0.f, 0.f), Quaternion::identity()));
+    }
+
+    RigidActor* kinActor = physWorld.getActor(kinBodyIdx);
+    
 
     PhysWorldDebugger physWorldDebugger(physWorld, renderer);
 
     SDL_Event event;
     bool quit = false;
     float r = 0.f;
+    bool bMouseDown = false;
+    float offsetX = 0.f;
+    float offsetY = 0.f;
+
     while (!quit)
     {
         while(SDL_PollEvent(&event))
@@ -58,6 +64,22 @@ int main(int argc, char *argv[])
             if (event.type == SDL_QUIT)
             {
                 quit = 1;
+            }
+            
+            if(event.type == SDL_MOUSEBUTTONDOWN)
+            {
+                bMouseDown = true;
+            }
+
+            if (event.type == SDL_MOUSEBUTTONUP)
+            {
+                bMouseDown = false;
+            }
+
+            if (event.type == SDL_MOUSEMOTION)
+            {
+                offsetX += event.motion.xrel;
+                offsetY += event.motion.yrel;
             }
         }
 

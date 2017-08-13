@@ -68,10 +68,12 @@ public:
                 //rb.bodyToWorld.rotation = 0.5f * deltaTime * Quaternion(rb.angularVelocity) * rb.bodyToWorld.rotation;
                 float angle = 0.f;
                 Vector3 rotationAxis = rb.angularVelocity.getSafeNormal();
+
                 if(isNearlyEqual(rotationAxis.length(), 1.f))
                 {
                     angle = rb.angularVelocity.length();
                 }
+
                 rb.bodyToWorld.rotation = Quaternion::fromAxisAndAngle(rotationAxis, angle * deltaTime) * rb.bodyToWorld.rotation;    //this is lame, should use quat differentation
                 //todo: angular velocity
             }
@@ -86,9 +88,9 @@ public:
         return ret;
     }
 
-    int createConstraint(int actor1, int actor2)
+    int createConstraint(int actor1, const Transform& localTM1, int actor2, const Transform& localTM2)
     {
-        constraints.push_back(new Constraint(&actors[actor1]->body, &actors[actor2]->body));
+        constraints.push_back(new Constraint(&actors[actor1]->body, localTM1, &actors[actor2]->body, localTM2));
         return (int)constraints.size() - 1;
     }
 
