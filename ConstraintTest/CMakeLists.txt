@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.7)
-project(Sandbox)
+project(ConstraintTest)
 
-set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../CMake)
+set(CMAKE_MODULE_PATH ../CMake)
 
-include_directories(${CMAKE_SOURCE_DIR}/../Public)
-include_directories(${CMAKE_SOURCE_DIR}/../External)
+include_directories(../Public)
+include_directories(../External)
 
 set(ConstraintSource ConstraintTest.cpp)
 set(PhysTestSource PhysUnitTest.cpp)
