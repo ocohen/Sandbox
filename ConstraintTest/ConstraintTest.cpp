@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
     compoundBody.shapes.push_back(Box(Vector3(5.f), Transform(Vector3(0.f, 0.f, 0.f), Quaternion(0.f, 0.f, 0.f, 1.f))));
     compoundBody.linearDamping = 0.2f;
 
-    const int numBodies = 9;
+    const int numBodies = 2;
 
     RigidBodyDesc kinematicBody;
     kinematicBody.invMass = 0.f;
@@ -56,6 +56,8 @@ int main(int argc, char *argv[])
     bool bMouseDown = false;
     float offsetX = 0.f;
     float offsetY = 0.f;
+    bool bSimulate = false;
+    int frame = 0;
 
     while (!quit)
     {
@@ -74,6 +76,7 @@ int main(int argc, char *argv[])
             if (event.type == SDL_MOUSEBUTTONUP)
             {
                 bMouseDown = false;
+                bSimulate = true;
             }
 
             if (event.type == SDL_MOUSEMOTION)
@@ -83,9 +86,15 @@ int main(int argc, char *argv[])
             }
         }
 
-        const float deltaTime = 1/60.f;
+        const float deltaTime = 1/30.f;
 
-        physWorld.simulate(deltaTime);
+        if(bSimulate || frame < 8 || true)
+        {
+            bSimulate = false;
+            physWorld.simulate(deltaTime);
+            frame++;
+        }
+        
         //kinBody.bodyToWorld.translation.y = 0.f;//sin(r) * 20.f;
         //kinBody.bodyToWorld.translation.x = 50.f + cos(r) * 20.f;
         //r += deltaTime;

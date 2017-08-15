@@ -36,6 +36,9 @@ struct Constraint
 
     void solveConstraint(float invDeltaTime)
     {
+        float hackTrue = 0.f;
+        do
+        {
         if(body1->invMass > OC_BIG_EPSILON || body2->invMass > OC_BIG_EPSILON)
         {
             const float invMass1 = body1->invMass * invMassScale1;
@@ -50,10 +53,11 @@ struct Constraint
             const Transform p2TM = body2TM * frame2;
 
 
-            const Vector3 p2Top1 = p1TM.translation - p2TM.translation;
-            const Vector3 p2ToP1Normal = p2Top1.getSafeNormal();
-            const float p2ToP1Length = p2Top1.length();
-            const float linearError = p2ToP1Length - distance;
+            const Vector3 n = p2TM.translation - p1TM.translation;
+            const Vector3 nBar = n.getSafeNormal();
+            const float nLength = n.length();
+            const float linearError = nLength - distance;
+            //const Vector3 directedDistance = p2ToP1Normal * (linearError);
             /*if(fabs(linearError) > linearProjection)
             {
                 //todo: actually sort by kinematics properly
@@ -62,24 +66,32 @@ struct Constraint
             }
             else*/
             {
-                const Vector3 comToP1 = p1TM.translation - body1TM.translation;
-                const Vector3 p1WorldVel = body1->linearVelocity + Vector3::crossProduct(body1->angularVelocity, comToP1);
+                const Vector3 r1 = p1TM.translation - body1TM.translation;
+                const Vector3 p1WorldVel = body1->linearVelocity + Vector3::crossProduct(body1->angularVelocity, r1);
 
-                const Vector3 comToP2 = p2TM.translation - body2TM.translation;
-                const Vector3 p2WorldVel = body2->linearVelocity + Vector3::crossProduct(body2->angularVelocity, comToP2);
+                const Vector3 r2 = p2TM.translation - body2TM.translation;
+                const Vector3 p2WorldVel = body2->linearVelocity + Vector3::crossProduct(body2->angularVelocity, r2);
 
-                const float relVelocity = Vector3::dotProduct(p1WorldVel - p2WorldVel, p2ToP1Normal);
-                const Vector3 correctionImpulse = p2ToP1Normal * (relVelocity + linearError*invDeltaTime * 0.3f);
+                const float relVelocity = Vector3::dotProduct(p2WorldVel - p1WorldVel, nBar);
+                const float lambda = -relVelocity / (1.f - 0.5f * (r2.dotProduct(nBar)*r2.dotProduct(nBar) + 2*r2.dotProduct(r2) + r1.dotProduct(nBar)*r1.dotProduct(nBar) + 2*r1.dotProduct(r1)));
+                const Vector3 correctionImpulse = -lambda * nBar;
+                //const Vector3 correctionImpulse = nBar * (-relVelocity);//(relVelocity + linearError*invDeltaTime * 0.0f);
+
+                //const float relVelocity = Vector3::dotProduct(p1WorldVel - p2WorldVel, directedDistance);
+                //const Vector3 correctionImpulse = p2ToP1Normal * relVelocity;//(relVelocity + linearError*invDeltaTime * 0.3f);
                 
                 const Vector3 b1LinearImpulse = -correctionImpulse * weight1;
                 body1->linearVelocity += b1LinearImpulse;
-                body1->angularVelocity += Vector3::crossProduct(comToP1, b1LinearImpulse);
+                body1->angularVelocity +=  Vector3::crossProduct(r1, b1LinearImpulse);
+
 
                 const Vector3 b2LinearImpulse = correctionImpulse * weight2;
                 body2->linearVelocity += b2LinearImpulse;
-                body2->angularVelocity += Vector3::crossProduct(comToP2, b2LinearImpulse);
+                body2->angularVelocity += Vector3::crossProduct(r2, b2LinearImpulse);
+
             }
         }
+        }while(hackTrue--);
     }
     
 };

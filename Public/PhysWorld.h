@@ -7,6 +7,7 @@
 #include "Renderer.h"
 #include "ShapeRenderer.h"
 #include "Float3.h"
+#include "Vector4.h"
 
 class PhysWorld
 {
@@ -63,7 +64,7 @@ public:
             {
                 //const Float3 linVelScalers = rb.linearVelocity.asScalers<Float3>();
                 //rb.linearVelocity = rb.linearVelocity - Vector3(linVelScalers * linVelScalers) * rb.linearDamping;
-                rb.linearVelocity = rb.linearVelocity - 0.0001f * Vector3(sign(rb.linearVelocity.x) * rb.linearVelocity.x*rb.linearVelocity.x, sign(rb.linearVelocity.y) * rb.linearVelocity.y*rb.linearVelocity.y, sign(rb.linearVelocity.z) * rb.linearVelocity.z*rb.linearVelocity.z) * rb.linearDamping;
+                //rb.linearVelocity = rb.linearVelocity - 0.0001f * Vector3(sign(rb.linearVelocity.x) * rb.linearVelocity.x*rb.linearVelocity.x, sign(rb.linearVelocity.y) * rb.linearVelocity.y*rb.linearVelocity.y, sign(rb.linearVelocity.z) * rb.linearVelocity.z*rb.linearVelocity.z) * rb.linearDamping;
                 rb.bodyToWorld.translation += rb.linearVelocity * deltaTime;
                 //rb.bodyToWorld.rotation = 0.5f * deltaTime * Quaternion(rb.angularVelocity) * rb.bodyToWorld.rotation;
                 float angle = 0.f;
@@ -74,8 +75,15 @@ public:
                     angle = rb.angularVelocity.length();
                 }
 
-                rb.bodyToWorld.rotation = Quaternion::fromAxisAndAngle(rotationAxis, angle * deltaTime) * rb.bodyToWorld.rotation;    //this is lame, should use quat differentation
-                //todo: angular velocity
+                rb.bodyToWorld.rotation = Quaternion::fromAxisAndAngle(rotationAxis, angle * deltaTime) * rb.bodyToWorld.rotation;    //this is lame, should use quat differentation*/
+
+                /*Vector3 imag = rb.bodyToWorld.rotation.imaginary;
+                Vector4 quat(imag.x, imag.y, imag.z, rb.bodyToWorld.rotation.real);
+                Vector4 leftQuat = quat + quat * deltaTime * 0.5f;
+                Quaternion leftQuatq(leftQuat.x, leftQuat.y, leftQuat.z, leftQuat.w);
+                Quaternion rightQuat(rb.angularVelocity.x, rb.angularVelocity.y, rb.angularVelocity.z, 0.f);
+                Quaternion finalQ = leftQuatq * rightQuat;
+                rb.bodyToWorld.rotation = finalQ;*/
             }
         }
     }

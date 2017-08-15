@@ -78,6 +78,7 @@ struct TQuaternion : private VectorOps<TQuaternion<Scaler>, Scaler>
     using VOps::length;
     using VOps::length2;
     using VOps::isNearlyEqual;
+    using VOps::dotProduct;
 
     friend VOps;
 
