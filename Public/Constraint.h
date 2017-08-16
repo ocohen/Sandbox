@@ -56,7 +56,7 @@ struct Constraint
             const Vector3 n = p2TM.translation - p1TM.translation;
             const Vector3 nBar = n.getSafeNormal();
             const float nLength = n.length();
-            const float linearError = nLength - distance;
+            const float linearError = distance - nLength;
             //const Vector3 directedDistance = p2ToP1Normal * (linearError);
             /*if(fabs(linearError) > linearProjection)
             {
@@ -73,8 +73,11 @@ struct Constraint
                 const Vector3 p2WorldVel = body2->linearVelocity + Vector3::crossProduct(body2->angularVelocity, r2);
 
                 const float relVelocity = Vector3::dotProduct(p2WorldVel - p1WorldVel, nBar);
-                const float lambda = -relVelocity / (1.f - 0.5f * (r2.dotProduct(nBar)*r2.dotProduct(nBar) + 2*r2.dotProduct(r2) + r1.dotProduct(nBar)*r1.dotProduct(nBar) + 2*r1.dotProduct(r1)));
-                const Vector3 correctionImpulse = -lambda * nBar;
+                const float r2squaredMinusR2Dot = r2.length2()*weight2 - r2.dotProduct(nBar*weight2)*r2.dotProduct(nBar);
+                const float r1squaredMinusR1Dot = r1.length2()*weight1 - r1.dotProduct(nBar*weight1)*r1.dotProduct(nBar);
+                const float lambda = -relVelocity / (1.f + r2squaredMinusR2Dot + r1squaredMinusR1Dot);
+                const Vector3 correctionImpulse = (linearError * 0.1f + lambda) * nBar;
+                //const Vector3 correctionImpulse = (nBar * (lambda * 0.9f + linearError * 0.f));
                 //const Vector3 correctionImpulse = nBar * (-relVelocity);//(relVelocity + linearError*invDeltaTime * 0.0f);
 
                 //const float relVelocity = Vector3::dotProduct(p1WorldVel - p2WorldVel, directedDistance);

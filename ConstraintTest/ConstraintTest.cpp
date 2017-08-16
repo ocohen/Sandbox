@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
     compoundBody.shapes.push_back(Box(Vector3(5.f), Transform(Vector3(0.f, 0.f, 0.f), Quaternion(0.f, 0.f, 0.f, 1.f))));
     compoundBody.linearDamping = 0.2f;
 
-    const int numBodies = 2;
+    const int numBodies = 9;
 
     RigidBodyDesc kinematicBody;
     kinematicBody.invMass = 0.f;
@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
 
         const float deltaTime = 1/30.f;
 
-        if(bSimulate || frame < 8 || true)
+        if(bSimulate || frame < 20 || true)
         {
             bSimulate = false;
             physWorld.simulate(deltaTime);

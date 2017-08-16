@@ -22,6 +22,26 @@ public:
         return body.shapes;
     }
 
+    void setLinearVelocity(const Vector3& inLinVel)
+    {
+        body.linearVelocity = inLinVel;
+    }
+
+    const Vector3& getLinearVelocity() const
+    {
+        return body.linearVelocity;
+    }
+
+    void setAngularVelocity(const Vector3& inAngVel)
+    {
+        body.angularVelocity = inAngVel;
+    }
+
+    const Vector3& getAngularVelocity() const
+    {
+        return body.angularVelocity;
+    }
+
 private:
     friend class PhysWorld;
     friend class PhysWorldDebugger;
