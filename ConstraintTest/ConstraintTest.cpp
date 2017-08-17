@@ -1,6 +1,7 @@
 #include <SDL.h>
 #include "Renderer.h"
 #include "PhysWorld.h"
+#include "Logger.h"
  
 int main(int argc, char *argv[])
 {
@@ -16,7 +17,11 @@ int main(int argc, char *argv[])
     
     renderer.setCameraLookAt(cameraPosition, target, up);
 
+    Logger logger;
+
     PhysWorld physWorld(Vector3(0.f, -98.1f, 0.f));
+    physWorld.logger = &logger;
+
     RigidBodyDesc bodyDescs[2];
     RigidBodyDesc& simpleBodySphere = bodyDescs[0];
     simpleBodySphere.shapes.push_back(Sphere(5.f, Transform(Vector3(0.f), Quaternion(0.f, 0.f, 0.f, 1.f))));
@@ -58,6 +63,7 @@ int main(int argc, char *argv[])
     float offsetY = 0.f;
     bool bSimulate = false;
     int frame = 0;
+    bool bDumpLogs = true;
 
     while (!quit)
     {
@@ -86,13 +92,19 @@ int main(int argc, char *argv[])
             }
         }
 
-        const float deltaTime = 1/30.f;
+        const float deltaTime = 1/60.f;
 
-        if(bSimulate || frame < 20 || true)
+        if(bSimulate || frame < 200)
         {
             bSimulate = false;
             physWorld.simulate(deltaTime);
             frame++;
+            logger.advance();
+        }
+        else if(bDumpLogs)
+        {
+            bDumpLogs = false;
+            logger.dumpLogs();
         }
         
         //kinBody.bodyToWorld.translation.y = 0.f;//sin(r) * 20.f;

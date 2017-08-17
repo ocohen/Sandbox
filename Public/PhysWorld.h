@@ -8,12 +8,15 @@
 #include "ShapeRenderer.h"
 #include "Float3.h"
 #include "Vector4.h"
+#include "Logger.h"
+#include <sstream>
 
 class PhysWorld
 {
 public:
     PhysWorld(const Vector3& inGravity)
         : gravity(inGravity)
+        , logger(nullptr)
     {
     }
 
@@ -98,12 +101,28 @@ public:
 
     int createConstraint(int actor1, const Transform& localTM1, int actor2, const Transform& localTM2)
     {
-        constraints.push_back(new Constraint(&actors[actor1]->body, localTM1, &actors[actor2]->body, localTM2));
-        return (int)constraints.size() - 1;
+        Constraint* newConstraint = new Constraint(&actors[actor1]->body, localTM1, &actors[actor2]->body, localTM2);
+
+        constraints.push_back(newConstraint);
+        const int constraintIdx = (int)constraints.size() - 1;
+
+        if(logger)
+        {
+            std::ostringstream stringStream;
+            stringStream << "Constraint[" << constraintIdx << "]";
+            std::string copyOfStr = stringStream.str();
+
+            newConstraint->logger = logger;
+            newConstraint->loggerKey = stringStream.str();
+        }
+
+        return constraintIdx;
     }
 
     RigidActor* getActor(int idx) { return actors[idx]; }
     Constraint* getConstraint(int idx){ return constraints[idx]; }
+
+    Logger* logger;
 
 private:
 	std::vector<RigidActor*> actors;

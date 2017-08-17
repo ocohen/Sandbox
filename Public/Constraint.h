@@ -4,6 +4,7 @@
 #include <float.h>
 #include "Vector3.h"
 #include "Transform.h"
+#include "Logger.h"
 
 struct Constraint
 {
@@ -19,6 +20,9 @@ struct Constraint
     float linearProjection;
     float distance;
 
+    Logger* logger;
+    std::string loggerKey;
+
     Constraint(RigidBody* inBody1, const Transform& localTM1, RigidBody* inBody2, const Transform& localTM2)
         : body1(inBody1)
         , body2(inBody2)
@@ -27,6 +31,7 @@ struct Constraint
         , invInertiaScale1(1.f)
         , invInertiaScale2(1.f)
         , linearProjection(FLT_MAX)
+        , logger(nullptr)
     {
         frame1 = localTM1;
         frame2 = localTM2;
@@ -57,6 +62,10 @@ struct Constraint
             const Vector3 nBar = n.getSafeNormal();
             const float nLength = n.length();
             const float linearError = distance - nLength;
+            if(logger)
+            {
+                logger->log(loggerKey + std::string("_linearError"), linearError);
+            }
             //const Vector3 directedDistance = p2ToP1Normal * (linearError);
             /*if(fabs(linearError) > linearProjection)
             {
@@ -73,10 +82,22 @@ struct Constraint
                 const Vector3 p2WorldVel = body2->linearVelocity + Vector3::crossProduct(body2->angularVelocity, r2);
 
                 const float relVelocity = Vector3::dotProduct(p2WorldVel - p1WorldVel, nBar);
+
+                if (logger)
+                {
+                    logger->log(loggerKey + std::string("_relVelocity"), relVelocity);
+                }
+
                 const float r2squaredMinusR2Dot = r2.length2()*weight2 - r2.dotProduct(nBar*weight2)*r2.dotProduct(nBar);
                 const float r1squaredMinusR1Dot = r1.length2()*weight1 - r1.dotProduct(nBar*weight1)*r1.dotProduct(nBar);
                 const float lambda = -relVelocity / (1.f + r2squaredMinusR2Dot + r1squaredMinusR1Dot);
-                const Vector3 correctionImpulse = (linearError * 0.1f + lambda) * nBar;
+                const Vector3 correctionImpulse = (lambda + linearError * 1.f) * nBar;
+
+                if (logger)
+                {
+                    logger->log(loggerKey + std::string("_lambda"), lambda);
+                }
+
                 //const Vector3 correctionImpulse = (nBar * (lambda * 0.9f + linearError * 0.f));
                 //const Vector3 correctionImpulse = nBar * (-relVelocity);//(relVelocity + linearError*invDeltaTime * 0.0f);
 
