@@ -64,7 +64,7 @@ struct Constraint
             const float linearError = distance - nLength;
             if(logger)
             {
-                logger->log(loggerKey + std::string("_linearError"), linearError);
+                logger->log(loggerKey, std::string("linearError"), linearError);
             }
             //const Vector3 directedDistance = p2ToP1Normal * (linearError);
             /*if(fabs(linearError) > linearProjection)
@@ -85,17 +85,17 @@ struct Constraint
 
                 if (logger)
                 {
-                    logger->log(loggerKey + std::string("_relVelocity"), relVelocity);
+                    logger->log(loggerKey, std::string("relVelocity"), relVelocity);
                 }
 
                 const float r2squaredMinusR2Dot = r2.length2()*weight2 - r2.dotProduct(nBar*weight2)*r2.dotProduct(nBar);
                 const float r1squaredMinusR1Dot = r1.length2()*weight1 - r1.dotProduct(nBar*weight1)*r1.dotProduct(nBar);
                 const float lambda = -relVelocity / (1.f + r2squaredMinusR2Dot + r1squaredMinusR1Dot);
-                const Vector3 correctionImpulse = (lambda + linearError * 1.f) * nBar;
+                const Vector3 correctionImpulse = (lambda + linearError * invDeltaTime * 0.1f) * nBar;
 
                 if (logger)
                 {
-                    logger->log(loggerKey + std::string("_lambda"), lambda);
+                    logger->log(loggerKey, std::string("lambda"), -lambda);
                 }
 
                 //const Vector3 correctionImpulse = (nBar * (lambda * 0.9f + linearError * 0.f));
@@ -111,7 +111,7 @@ struct Constraint
 
                 const Vector3 b2LinearImpulse = correctionImpulse * weight2;
                 body2->linearVelocity += b2LinearImpulse;
-                body2->angularVelocity += Vector3::crossProduct(r2, b2LinearImpulse);
+                body2->angularVelocity += Vector3::crossProduct(r2, b2LinearImpulse) * 0.1f;
 
             }
         }

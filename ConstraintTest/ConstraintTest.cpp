@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
     Logger logger;
 
     PhysWorld physWorld(Vector3(0.f, -98.1f, 0.f));
-    physWorld.logger = &logger;
+    //physWorld.logger = &logger;
 
     RigidBodyDesc bodyDescs[2];
     RigidBodyDesc& simpleBodySphere = bodyDescs[0];
@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
     compoundBody.shapes.push_back(Box(Vector3(5.f), Transform(Vector3(0.f, 0.f, 0.f), Quaternion(0.f, 0.f, 0.f, 1.f))));
     compoundBody.linearDamping = 0.2f;
 
-    const int numBodies = 9;
+    const int numBodies = 10;
 
     RigidBodyDesc kinematicBody;
     kinematicBody.invMass = 0.f;
@@ -92,9 +92,9 @@ int main(int argc, char *argv[])
             }
         }
 
-        const float deltaTime = 1/60.f;
+        const float deltaTime = 1/30.f;
 
-        if(bSimulate || frame < 200)
+        if(bSimulate || frame < 200 || true)
         {
             bSimulate = false;
             physWorld.simulate(deltaTime);

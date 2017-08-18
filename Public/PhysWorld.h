@@ -50,7 +50,7 @@ public:
         const float invDeltaTime = 1.f / deltaTime;
 
         //solve constraints
-        for(int itr = 0; itr < 4; ++itr)
+        for(int itr = 0; itr < 8; ++itr)
         {
             for (Constraint* constraint : constraints)
             {
@@ -106,7 +106,7 @@ public:
         constraints.push_back(newConstraint);
         const int constraintIdx = (int)constraints.size() - 1;
 
-        if(logger)
+        if(logger && constraints.size() == 1)
         {
             std::ostringstream stringStream;
             stringStream << "Constraint[" << constraintIdx << "]";
