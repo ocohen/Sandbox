@@ -52,6 +52,11 @@ public:
         //solve constraints
         for(int itr = 0; itr < 8; ++itr)
         {
+            if (logger)
+            {
+                logger->advance();
+            }
+
             for (Constraint* constraint : constraints)
             {
                 constraint->solveConstraint(invDeltaTime);
@@ -67,7 +72,7 @@ public:
             {
                 //const Float3 linVelScalers = rb.linearVelocity.asScalers<Float3>();
                 //rb.linearVelocity = rb.linearVelocity - Vector3(linVelScalers * linVelScalers) * rb.linearDamping;
-                //rb.linearVelocity = rb.linearVelocity - 0.0001f * Vector3(sign(rb.linearVelocity.x) * rb.linearVelocity.x*rb.linearVelocity.x, sign(rb.linearVelocity.y) * rb.linearVelocity.y*rb.linearVelocity.y, sign(rb.linearVelocity.z) * rb.linearVelocity.z*rb.linearVelocity.z) * rb.linearDamping;
+                rb.linearVelocity = rb.linearVelocity - 0.0001f * Vector3(sign(rb.linearVelocity.x) * rb.linearVelocity.x*rb.linearVelocity.x, sign(rb.linearVelocity.y) * rb.linearVelocity.y*rb.linearVelocity.y, sign(rb.linearVelocity.z) * rb.linearVelocity.z*rb.linearVelocity.z) * rb.linearDamping;
                 rb.bodyToWorld.translation += rb.linearVelocity * deltaTime;
                 //rb.bodyToWorld.rotation = 0.5f * deltaTime * Quaternion(rb.angularVelocity) * rb.bodyToWorld.rotation;
                 float angle = 0.f;

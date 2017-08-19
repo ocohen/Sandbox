@@ -26,6 +26,7 @@ inline float computeVolume(const ShapeUnion& shapeUnion)
 struct MassProperties
 {
     //Matrix33 inertia;
+    float inertia;  //todo: hack for now to get a simple scaling factor
     Vector3 com;
     float mass;
 
@@ -44,6 +45,13 @@ struct MassProperties
         com = shapeUnion.shape.localTM.translation * comWeight + (1.f - comWeight) * com;
         mass = newTotalMass;
         //todo inertia
+        //total hack for inertia scaling, ignores multiple shapes and 3d
+        switch(shapeUnion.shape.type)
+        {
+        case EShapeType::Sphere: inertia = 2.f*mass*shapeUnion.asSphere().radius*shapeUnion.asSphere().radius / 5.f; break;
+        case EShapeType::Box: inertia = mass*shapeUnion.asBox().halfExtents.x*shapeUnion.asBox().halfExtents.x*4.f/6.f; break;  //terrible assumes cube
+        default: inertia = 1.f;
+        }
     }
 };
 

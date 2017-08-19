@@ -14,6 +14,8 @@ class Logger
 public:
     void log(LoggerKey key, LoggerKey subKey, float val)
     {
+        if(!enabled) { return; }
+
         auto it = allEntries.find(key);
         if(it == allEntries.end())
         {
@@ -109,13 +111,18 @@ public:
 
     void advance()
     {
-        ++curFrame;
+        if(enabled)
+        {
+            ++curFrame;
+        }
     }
 
     Logger()
     : curFrame(0)
     {
     }
+
+    bool enabled;
 
 private:
     struct Entry

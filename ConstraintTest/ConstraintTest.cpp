@@ -20,16 +20,21 @@ int main(int argc, char *argv[])
     Logger logger;
 
     PhysWorld physWorld(Vector3(0.f, -98.1f, 0.f));
-    //physWorld.logger = &logger;
+    physWorld.logger = &logger;
+    logger.enabled = false;
 
-    RigidBodyDesc bodyDescs[2];
+    RigidBodyDesc bodyDescs[3];
     RigidBodyDesc& simpleBodySphere = bodyDescs[0];
     simpleBodySphere.shapes.push_back(Sphere(5.f, Transform(Vector3(0.f), Quaternion(0.f, 0.f, 0.f, 1.f))));
-    simpleBodySphere.linearDamping = 0.2f;
+    simpleBodySphere.linearDamping = 0.5f;
 
     RigidBodyDesc& compoundBody = bodyDescs[1];
     compoundBody.shapes.push_back(Box(Vector3(5.f), Transform(Vector3(0.f, 0.f, 0.f), Quaternion(0.f, 0.f, 0.f, 1.f))));
-    compoundBody.linearDamping = 0.2f;
+    compoundBody.linearDamping = 0.5f;
+
+    RigidBodyDesc& compoundBody2 = bodyDescs[2];
+    compoundBody2.shapes.push_back(Box(Vector3(10.f), Transform(Vector3(0.f, 0.f, 0.f), Quaternion(0.f, 0.f, 0.f, 1.f))));
+    compoundBody2.linearDamping = 0.5f;
 
     const int numBodies = 10;
 
@@ -42,12 +47,12 @@ int main(int argc, char *argv[])
 
     for(int i=0; i<numBodies-1; ++i)
     {
-        physWorld.createRigidActor(Transform(Vector3(20.f * (i+1), 40.f, 0.f), Quaternion(0.f, 0.f, 0.f, 1.f)), bodyDescs[1]);
+        physWorld.createRigidActor(Transform(Vector3(15.f * (i+1), 40.f, 0.f), Quaternion(0.f, 0.f, 0.f, 1.f)), bodyDescs[(i+1)%2]);
     }
 
     for(int i=0; i<numBodies-1; ++i)
     {
-        physWorld.createConstraint(i, Transform::identity(), i+1, Transform(Vector3(-5.f, 0.f, 0.f), Quaternion::identity()));
+        physWorld.createConstraint(i, Transform(Vector3(i > 0 ? 5.f : 0.f, 0.f, 0.f), Quaternion::identity()), i+1, Transform(Vector3(-5.f, 0.f, 0.f), Quaternion::identity()));
     }
 
     RigidActor* kinActor = physWorld.getActor(kinBodyIdx);
@@ -63,7 +68,7 @@ int main(int argc, char *argv[])
     float offsetY = 0.f;
     bool bSimulate = false;
     int frame = 0;
-    bool bDumpLogs = true;
+    bool bDumpLogs = false;;
 
     while (!quit)
     {
@@ -92,7 +97,10 @@ int main(int argc, char *argv[])
             }
         }
 
-        const float deltaTime = 1/30.f;
+        for(int i =0; i< 2; ++i)
+        {
+        
+        const float deltaTime = 1/60.f;
 
         if(bSimulate || frame < 200 || true)
         {
@@ -101,10 +109,17 @@ int main(int argc, char *argv[])
             frame++;
             logger.advance();
         }
+        else if(frame < 210)
+        {
+            logger.enabled = true;
+            bSimulate = true;
+            bDumpLogs = true;
+        }
         else if(bDumpLogs)
         {
             bDumpLogs = false;
             logger.dumpLogs();
+        }
         }
         
         //kinBody.bodyToWorld.translation.y = 0.f;//sin(r) * 20.f;
