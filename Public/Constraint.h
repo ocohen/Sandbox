@@ -13,12 +13,23 @@ struct Constraint
     RigidBody* body2;
     Transform frame1;
     Transform frame2;
+
     float invMassScale1;
     float invMassScale2;
     float invInertiaScale1;
     float invInertiaScale2;
     float linearProjection;
     float distance;
+
+    //prepared data
+    Vector3 normal;
+    Vector3 r1;
+    Vector3 r2;
+    float geometricError;
+    float weight1;
+    float weight2;
+    float invMass1;
+    float invMass2;
 
     Logger* logger;
     std::string loggerKey;
@@ -39,18 +50,17 @@ struct Constraint
         distance = ((body1->bodyToWorld * frame1).translation - (body2->bodyToWorld * frame2).translation).length();
     }
 
-    void solveConstraint(float invDeltaTime)
+    virtual void prepareConstraint()
     {
-        float hackTrue = 0.f;
-        do
+        invMass1 = body1->invMass * invMassScale1;
+        invMass2 = body2->invMass * invMassScale2;
+
+        if(invMass1 > OC_BIG_EPSILON || invMass2 > OC_BIG_EPSILON)
         {
-        if(body1->invMass > OC_BIG_EPSILON || body2->invMass > OC_BIG_EPSILON)
-        {
-            const float invMass1 = body1->invMass * invMassScale1;
-            const float invMass2 = body2->invMass * invMassScale2;
             const float totalMass = 1.f / (invMass1 + invMass2);
-            const float weight1 = totalMass * invMass1;
-            const float weight2 = totalMass * invMass2;
+
+            weight1 = totalMass * invMass1;
+            weight2 = totalMass * invMass2;
 
             const Transform& body1TM = body1->bodyToWorld;
             const Transform p1TM = body1TM * frame1;
@@ -59,12 +69,23 @@ struct Constraint
 
 
             const Vector3 n = p2TM.translation - p1TM.translation;
-            const Vector3 nBar = n.getSafeNormal();
+            normal = n.getSafeNormal();
             const float nLength = n.length();
-            const float linearError = distance - nLength;
+            geometricError = distance - nLength;
+
+             r1 = p1TM.translation - body1TM.translation;
+             r2 = p2TM.translation - body2TM.translation;
+        }
+
+    }
+
+    void solveConstraint(float invDeltaTime)
+    {
+        if (invMass1 > OC_BIG_EPSILON || invMass2 > OC_BIG_EPSILON)
+        {
             if(logger)
             {
-                logger->log(loggerKey, std::string("linearError"), linearError);
+                logger->log(loggerKey, std::string("linearError"), geometricError);
             }
             //const Vector3 directedDistance = p2ToP1Normal * (linearError);
             /*if(fabs(linearError) > linearProjection)
@@ -75,35 +96,25 @@ struct Constraint
             }
             else*/
             {
-                const Vector3 r1 = p1TM.translation - body1TM.translation;
                 const Vector3 p1WorldVel = body1->linearVelocity + Vector3::crossProduct(body1->angularVelocity, r1);
-
-                const Vector3 r2 = p2TM.translation - body2TM.translation;
                 const Vector3 p2WorldVel = body2->linearVelocity + Vector3::crossProduct(body2->angularVelocity, r2);
-
-                const float relVelocity = Vector3::dotProduct(p2WorldVel - p1WorldVel, nBar);
+                const float relVelocity = Vector3::dotProduct(p2WorldVel - p1WorldVel, normal);
 
                 if (logger)
                 {
                     logger->log(loggerKey, std::string("relVelocity"), relVelocity);
                 }
 
-                const float r2squaredMinusR2Dot = r2.length2()*weight2 - r2.dotProduct(nBar*weight2)*r2.dotProduct(nBar);
-                const float r1squaredMinusR1Dot = r1.length2()*weight1 - r1.dotProduct(nBar*weight1)*r1.dotProduct(nBar);
+                const float r2squaredMinusR2Dot = r2.length2()*weight2 - r2.dotProduct(normal*weight2)*r2.dotProduct(normal);
+                const float r1squaredMinusR1Dot = r1.length2()*weight1 - r1.dotProduct(normal*weight1)*r1.dotProduct(normal);
                 const float lambda = -relVelocity / (1.f + r2squaredMinusR2Dot + r1squaredMinusR1Dot);
-                const Vector3 correctionImpulse = (lambda + linearError * invDeltaTime * 0.05f) * nBar;
+                const Vector3 correctionImpulse = (lambda + geometricError * invDeltaTime * 0.05f) * normal;
 
                 if (logger)
                 {
                     logger->log(loggerKey, std::string("lambda"), -lambda);
                 }
 
-                //const Vector3 correctionImpulse = (nBar * (lambda * 0.9f + linearError * 0.f));
-                //const Vector3 correctionImpulse = nBar * (-relVelocity);//(relVelocity + linearError*invDeltaTime * 0.0f);
-
-                //const float relVelocity = Vector3::dotProduct(p1WorldVel - p2WorldVel, directedDistance);
-                //const Vector3 correctionImpulse = p2ToP1Normal * relVelocity;//(relVelocity + linearError*invDeltaTime * 0.3f);
-                
                 if(invMass1 > 0)
                 {
                     const Vector3 b1LinearImpulse = -correctionImpulse * weight1 * (1.f/ invMass1);  //gross, compute better above
@@ -117,13 +128,9 @@ struct Constraint
                     body2->linearVelocity += b2LinearImpulse * invMass2;
                     body2->angularVelocity += Vector3::crossProduct(r2, b2LinearImpulse) * body2->invInertia.x;   //terrible assumes completely symmetric
                 }
-                
-
             }
         }
-        }while(hackTrue--);
     }
-    
 };
 
 #endif

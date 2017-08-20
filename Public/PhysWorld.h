@@ -46,6 +46,10 @@ public:
         }
 
         //update constraints
+        for (Constraint* constraint : constraints)
+        {
+            constraint->prepareConstraint();
+        }
 
         const float invDeltaTime = 1.f / deltaTime;
 
