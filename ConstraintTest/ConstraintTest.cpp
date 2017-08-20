@@ -102,14 +102,14 @@ int main(int argc, char *argv[])
         
         const float deltaTime = 1/60.f;
 
-        if(bSimulate || frame < 200 || true)
+        if(true || bSimulate /*|| frame < 200 || true*/)
         {
             bSimulate = false;
             physWorld.simulate(deltaTime);
             frame++;
             logger.advance();
         }
-        else if(frame < 210)
+        /*else if(frame < 210)
         {
             logger.enabled = true;
             bSimulate = true;
@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
         {
             bDumpLogs = false;
             logger.dumpLogs();
-        }
+        }*/
         }
         
         //kinBody.bodyToWorld.translation.y = 0.f;//sin(r) * 20.f;

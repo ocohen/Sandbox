@@ -22,10 +22,10 @@ struct Constraint
     float distance;
 
     //prepared data
-    Vector3 normal;
+    std::vector<Vector3> normals;
+    std::vector<float> geometricErrors;
     Vector3 r1;
     Vector3 r2;
-    float geometricError;
     float weight1;
     float weight2;
     float invMass1;
@@ -37,6 +37,8 @@ struct Constraint
     Constraint(RigidBody* inBody1, const Transform& localTM1, RigidBody* inBody2, const Transform& localTM2)
         : body1(inBody1)
         , body2(inBody2)
+        , frame1(localTM1)
+        , frame2(localTM2)
         , invMassScale1(1.f)
         , invMassScale2(1.f)
         , invInertiaScale1(1.f)
@@ -44,9 +46,6 @@ struct Constraint
         , linearProjection(FLT_MAX)
         , logger(nullptr)
     {
-        frame1 = localTM1;
-        frame2 = localTM2;
-
         distance = ((body1->bodyToWorld * frame1).translation - (body2->bodyToWorld * frame2).translation).length();
     }
 
@@ -69,9 +68,11 @@ struct Constraint
 
 
             const Vector3 n = p2TM.translation - p1TM.translation;
-            normal = n.getSafeNormal();
+            normals.clear();
+            normals.push_back(n.getSafeNormal());
             const float nLength = n.length();
-            geometricError = distance - nLength;
+            geometricErrors.clear();
+            geometricErrors.push_back(distance - nLength);
 
              r1 = p1TM.translation - body1TM.translation;
              r2 = p2TM.translation - body2TM.translation;
@@ -83,19 +84,16 @@ struct Constraint
     {
         if (invMass1 > OC_BIG_EPSILON || invMass2 > OC_BIG_EPSILON)
         {
-            if(logger)
+            const int numRows = (int)normals.size();
+            for(int rowIdx = 0; rowIdx < numRows; ++rowIdx)
             {
-                logger->log(loggerKey, std::string("linearError"), geometricError);
-            }
-            //const Vector3 directedDistance = p2ToP1Normal * (linearError);
-            /*if(fabs(linearError) > linearProjection)
-            {
-                //todo: actually sort by kinematics properly
-                //body1->bodyToWorld.translation += -p2ToP1Normal * weight1 * linearError;
-                //body2->bodyToWorld.translation += p2ToP1Normal * weight2 * linearError;
-            }
-            else*/
-            {
+                const Vector3& normal = normals[rowIdx];
+                const float geometricError = geometricErrors[rowIdx];
+
+                if (logger)
+                {
+                    logger->log(loggerKey, std::string("linearError"), geometricError);
+                }
                 const Vector3 p1WorldVel = body1->linearVelocity + Vector3::crossProduct(body1->angularVelocity, r1);
                 const Vector3 p2WorldVel = body2->linearVelocity + Vector3::crossProduct(body2->angularVelocity, r2);
                 const float relVelocity = Vector3::dotProduct(p2WorldVel - p1WorldVel, normal);
@@ -131,6 +129,57 @@ struct Constraint
             }
         }
     }
+};
+
+struct PerAxisConstraint : public Constraint
+{
+    PerAxisConstraint(RigidBody* inBody1, const Transform& localTM1, RigidBody* inBody2, const Transform& localTM2)
+        : Constraint(inBody1, localTM1, inBody2, localTM2)
+    {
+        Vector3 d = ((body2->bodyToWorld * frame2).translation - (body1->bodyToWorld * frame1).translation);
+        distances[0] = d.x;
+        distances[1] = d.y;
+        distances[2] = d.z;
+    }
+
+    virtual void prepareConstraint() override
+    {
+        invMass1 = body1->invMass * invMassScale1;
+        invMass2 = body2->invMass * invMassScale2;
+
+        if (invMass1 > OC_BIG_EPSILON || invMass2 > OC_BIG_EPSILON)
+        {
+            const float totalMass = 1.f / (invMass1 + invMass2);
+
+            weight1 = totalMass * invMass1;
+            weight2 = totalMass * invMass2;
+
+            const Transform& body1TM = body1->bodyToWorld;
+            const Transform p1TM = body1TM * frame1;
+            const Transform& body2TM = body2->bodyToWorld;
+            const Transform p2TM = body2TM * frame2;
+
+            if(normals.size() == 0)
+            {
+                normals.push_back(Vector3(1.f, 0.f, 0.f));
+                normals.push_back(Vector3(0.f, 1.f, 0.f));
+                normals.push_back(Vector3(0.f, 0.f, 1.f));
+            }
+            
+            const Vector3 offset = p2TM.translation - p1TM.translation;
+           
+            geometricErrors.clear();
+            for(int i=0; i<3; ++i)
+            {
+                geometricErrors.push_back((distances[i] - offset.dotProduct(normals[i])));
+            }
+
+            r1 = p1TM.translation - body1TM.translation;
+            r2 = p2TM.translation - body2TM.translation;
+        }
+    }
+
+    float distances[3];
 };
 
 #endif
