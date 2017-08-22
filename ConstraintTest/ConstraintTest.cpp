@@ -36,26 +36,33 @@ int main(int argc, char *argv[])
     compoundBody2.shapes.push_back(Box(Vector3(10.f), Transform(Vector3(0.f, 0.f, 0.f), Quaternion(0.f, 0.f, 0.f, 1.f))));
     compoundBody2.linearDamping = 0.5f;
 
-    const int numBodies = 10;
+    RigidBodyDesc rootBody;
+    const float chainOffset = 50.f;
 
-    RigidBodyDesc kinematicBody;
-    kinematicBody.invMass = 0.f;
-    kinematicBody.invInertia = Vector3(0.f, 0.f, 0.f);
-    kinematicBody.shapes.push_back(Sphere(5.f, Transform(Vector3(0.f), Quaternion(0.f, 0.f, 0.f, 1.f))));
-
-    int kinBodyIdx = physWorld.createRigidActor(Transform(Vector3(0.f, 40.f, 0.f), Quaternion(0.f, 0.f, 0.f, 1.f)), kinematicBody);
-
-    for(int i=0; i<numBodies-1; ++i)
+    for(int chainIdx = 0; chainIdx < 2; ++chainIdx)
     {
-        physWorld.createRigidActor(Transform(Vector3(15.f * (i+1), 40.f, 0.f), Quaternion(0.f, 0.f, 0.f, 1.f)), bodyDescs[(i+1)%2]);
+        const int numBodies = 10;
+
+        rootBody.shapes.push_back(Sphere(5.f, Transform(Vector3(0.f), Quaternion(0.f, 0.f, 0.f, 1.f))));
+
+        int kinBodyIdx = physWorld.createRigidActor(Transform(Vector3(0.f + chainIdx * chainOffset, 40.f, 0.f), Quaternion(0.f, 0.f, 0.f, 1.f)), rootBody);
+
+        for (int i = 0; i < numBodies - 1; ++i)
+        {
+            physWorld.createRigidActor(Transform(Vector3(10.f * (i + 1) + chainIdx * chainOffset, 40.f, 0.f), Quaternion(0.f, 0.f, 0.f, 1.f)), bodyDescs[(i + 1) % 2]);
+        }
+
+        physWorld.createConstraint(-1, Transform(Vector3(chainIdx * chainOffset, 40.f, 0.f) , Quaternion(0.f, 0.f, 0.f, 1.f)), + numBodies * chainIdx, Transform::identity());
+
+        for (int i = 0; i < numBodies - 1; ++i)
+        {
+            physWorld.createConstraint(i +  numBodies * chainIdx, Transform(Vector3(5.f, 0.f, 0.f), Quaternion::identity()), i + 1 + numBodies * chainIdx, Transform(Vector3(-5.f, 0.f, 0.f), Quaternion::identity()));
+        }
+
+        physWorld.fixedConstraints = true;
+
     }
 
-    for(int i=0; i<numBodies-1; ++i)
-    {
-        physWorld.createConstraint(i, Transform(Vector3(i > 0 ? 5.f : 0.f, 0.f, 0.f), Quaternion::identity()), i+1, Transform(Vector3(-5.f, 0.f, 0.f), Quaternion::identity()));
-    }
-
-    RigidActor* kinActor = physWorld.getActor(kinBodyIdx);
     
 
     PhysWorldDebugger physWorldDebugger(physWorld, renderer);

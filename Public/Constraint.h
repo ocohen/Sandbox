@@ -46,13 +46,18 @@ struct Constraint
         , linearProjection(FLT_MAX)
         , logger(nullptr)
     {
-        distance = ((body1->bodyToWorld * frame1).translation - (body2->bodyToWorld * frame2).translation).length();
+        const Transform body1TM = body1 ? body1->bodyToWorld : Transform::identity();
+        const Transform p1TM = body1TM * frame1;
+        const Transform body2TM = body2 ? body2->bodyToWorld : Transform::identity();
+        const Transform p2TM = body2TM * frame2;
+
+        distance = (p1TM.translation - p2TM.translation).length();
     }
 
     virtual void prepareConstraint()
     {
-        invMass1 = body1->invMass * invMassScale1;
-        invMass2 = body2->invMass * invMassScale2;
+        invMass1 = body1 ? body1->invMass * invMassScale1 : 0.f;
+        invMass2 = body2 ? body2->invMass * invMassScale2 : 0.f;
 
         if(invMass1 > OC_BIG_EPSILON || invMass2 > OC_BIG_EPSILON)
         {
@@ -61,9 +66,9 @@ struct Constraint
             weight1 = totalMass * invMass1;
             weight2 = totalMass * invMass2;
 
-            const Transform& body1TM = body1->bodyToWorld;
+            const Transform body1TM = body1 ? body1->bodyToWorld : Transform::identity();
             const Transform p1TM = body1TM * frame1;
-            const Transform& body2TM = body2->bodyToWorld;
+            const Transform body2TM = body2 ? body2->bodyToWorld : Transform::identity();
             const Transform p2TM = body2TM * frame2;
 
 
@@ -94,8 +99,8 @@ struct Constraint
                 {
                     logger->log(loggerKey, std::string("linearError"), geometricError);
                 }
-                const Vector3 p1WorldVel = body1->linearVelocity + Vector3::crossProduct(body1->angularVelocity, r1);
-                const Vector3 p2WorldVel = body2->linearVelocity + Vector3::crossProduct(body2->angularVelocity, r2);
+                const Vector3 p1WorldVel = body1 ? body1->linearVelocity + Vector3::crossProduct(body1->angularVelocity, r1) : Vector3(0.f);
+                const Vector3 p2WorldVel = body2 ? body2->linearVelocity + Vector3::crossProduct(body2->angularVelocity, r2) : Vector3(0.f);
                 const float relVelocity = Vector3::dotProduct(p2WorldVel - p1WorldVel, normal);
 
                 if (logger)
@@ -136,7 +141,12 @@ struct PerAxisConstraint : public Constraint
     PerAxisConstraint(RigidBody* inBody1, const Transform& localTM1, RigidBody* inBody2, const Transform& localTM2)
         : Constraint(inBody1, localTM1, inBody2, localTM2)
     {
-        Vector3 d = ((body2->bodyToWorld * frame2).translation - (body1->bodyToWorld * frame1).translation);
+        const Transform body1TM = body1 ? body1->bodyToWorld : Transform::identity();
+        const Transform p1TM = body1TM * frame1;
+        const Transform body2TM = body2 ? body2->bodyToWorld : Transform::identity();
+        const Transform p2TM = body2TM * frame2;
+
+        Vector3 d = p2TM.translation - p1TM.translation;
         distances[0] = d.x;
         distances[1] = d.y;
         distances[2] = d.z;
@@ -144,8 +154,8 @@ struct PerAxisConstraint : public Constraint
 
     virtual void prepareConstraint() override
     {
-        invMass1 = body1->invMass * invMassScale1;
-        invMass2 = body2->invMass * invMassScale2;
+        invMass1 = body1 ? body1->invMass * invMassScale1 : 0.f;
+        invMass2 = body2 ? body2->invMass * invMassScale2 : 0.f;
 
         if (invMass1 > OC_BIG_EPSILON || invMass2 > OC_BIG_EPSILON)
         {
@@ -154,9 +164,9 @@ struct PerAxisConstraint : public Constraint
             weight1 = totalMass * invMass1;
             weight2 = totalMass * invMass2;
 
-            const Transform& body1TM = body1->bodyToWorld;
+            const Transform body1TM = body1 ? body1->bodyToWorld : Transform::identity();
             const Transform p1TM = body1TM * frame1;
-            const Transform& body2TM = body2->bodyToWorld;
+            const Transform body2TM = body2 ? body2->bodyToWorld : Transform::identity();
             const Transform p2TM = body2TM * frame2;
 
             if(normals.size() == 0)

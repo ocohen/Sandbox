@@ -18,7 +18,10 @@ public:
         : gravity(inGravity)
         , logger(nullptr)
     {
+        fixedConstraints = false;
     }
+
+    bool fixedConstraints;
 
     ~PhysWorld()
     {
@@ -110,7 +113,10 @@ public:
 
     int createConstraint(int actor1, const Transform& localTM1, int actor2, const Transform& localTM2)
     {
-        Constraint* newConstraint = new Constraint(&actors[actor1]->body, localTM1, &actors[actor2]->body, localTM2);
+        RigidBody* rigidBody1 = actor1 == -1 ? nullptr : &actors[actor1]->body;
+        RigidBody* rigidBody2 = actor2 == -1 ? nullptr : &actors[actor2]->body;
+
+        Constraint* newConstraint = fixedConstraints ? new PerAxisConstraint(rigidBody1, localTM1, rigidBody2, localTM2) : new Constraint(rigidBody1, localTM1, rigidBody2, localTM2);
 
         constraints.push_back(newConstraint);
         const int constraintIdx = (int)constraints.size() - 1;
