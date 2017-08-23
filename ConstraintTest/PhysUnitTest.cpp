@@ -49,9 +49,11 @@ TEST_CASE("Constraint", "[physics]")
     const Vector3 b1(0.f);
     RigidBodyDesc simDesc;
     simDesc.shapes.push_back(Sphere(1.f, Transform(b1, Quaternion::identity())));
-
+    
     const Vector3 b2(3.f, 2.f, 0.f);
     RigidBody sim(Transform(b2, Quaternion::identity()), simDesc);
+    sim.invInertia = Vector3(1.f);
+    sim.invMass = 1.f;
 
     RigidBodyDesc kinDesc = simDesc;
     kinDesc.invInertia = Vector3(0.f);
@@ -63,7 +65,8 @@ TEST_CASE("Constraint", "[physics]")
     Constraint c(&kin, Transform::identity(), &sim, Transform(r2, Quaternion::identity()));
     
     sim.angularVelocity = Vector3(0.f, 0.f, 10.f);
-    c.solveConstraint(1.f);
+    c.prepareConstraint();
+    c.solveConstraint(0.f);
 
     const Vector3 p1 = b1;
     const Vector3 p2 = b2 + r2;
