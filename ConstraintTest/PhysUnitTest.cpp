@@ -4,6 +4,7 @@
 #include "MassProperties.h"
 #include "RigidActor.h"
 #include "Constraint.h"
+#include "GJK.h"
 
 TEST_CASE("MassProperties", "[physics]")
 {
@@ -74,4 +75,14 @@ TEST_CASE("Constraint", "[physics]")
     const Vector3 cNBar = cN.getNormal();
     const float error = Vector3::dotProduct(sim.linearVelocity + Vector3::crossProduct(sim.angularVelocity, r2), cNBar);
     REQUIRE(isNearlyEqual(error, 0.f));
+}
+
+TEST_CASE("GeometryTests", "[physics]")
+{
+   Vector3 a(10.f, 11.f, 12.f);
+   Vector3 b(20.f, 11.f, 12.f);
+
+   REQUIRE(Vector3::isNearlyEqual(a, getClosestPointOnLineSegment(a,b,a)));
+   REQUIRE(Vector3::isNearlyEqual(b, getClosestPointOnLineSegment(a,b,b)));
+   REQUIRE(Vector3::isNearlyEqual(Vector3(15.f, 11.f, 12.f), getClosestPointOnLineSegment(a,b,Vector3(15.f, 11.f, 12.f))));
 }
