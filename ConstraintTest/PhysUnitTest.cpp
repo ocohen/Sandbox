@@ -85,4 +85,10 @@ TEST_CASE("GeometryTests", "[physics]")
    REQUIRE(Vector3::isNearlyEqual(a, getClosestPointOnLineSegment(a,b,a)));
    REQUIRE(Vector3::isNearlyEqual(b, getClosestPointOnLineSegment(a,b,b)));
    REQUIRE(Vector3::isNearlyEqual(Vector3(15.f, 11.f, 12.f), getClosestPointOnLineSegment(a,b,Vector3(15.f, 11.f, 12.f))));
+
+   Vector3 c(20.f, 20.f, 12.f);
+   REQUIRE(Vector3::isNearlyEqual(a, getClosestPointOnTriangle(a,b,c,a)));
+   REQUIRE(Vector3::isNearlyEqual(b, getClosestPointOnTriangle(a,b,c,b)));
+   REQUIRE(Vector3::isNearlyEqual(c, getClosestPointOnTriangle(a,b,c,c)));
+   REQUIRE(Vector3::isNearlyEqual(Vector3(11.f, 11.f, 12.f), getClosestPointOnTriangle(a,b,c,Vector3(11.f, 11.f, 12.f))));
 }

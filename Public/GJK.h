@@ -20,4 +20,70 @@ Vector3 getClosestPointOnLineSegment(const Vector3& lineStart, const Vector3& li
     return lineStart + t * ab;
 }
 
+Vector3 getClosestPointOnTriangle(const Vector3& a, const Vector3& b, const Vector3& c, const Vector3& p)
+{
+    //See orange collision detection book
+    //compute barycentric coordinates of the projection of p onto the triangle abc
+    const Vector3 ab = b-a;
+    const Vector3 ac = c-a;
+    const Vector3 bc = c-b;
+
+    const Vector3 ap = p-a;
+    const Vector3 bp = p-b;
+    const Vector3 cp = p-c;
+
+    //find p' = A + s*AB which is the projection of p onto ab
+    const float sNom = Vector3::dotProduct(ap, ab);
+    const float sDenom = Vector3::dotProduct(bp, a - b);
+
+    //find p' = A + t*AC which is the projection of p onto ac
+    const float tNom = Vector3::dotProduct(ap, ac);
+    const float tDenom = Vector3::dotProduct(cp, a - c);
+
+    if(sNom <= 0.f && tNom <= 0.f)
+    {
+        return a;
+    }
+
+    //find p' = B + u*BC which is the projection of p onto bc
+    const float uNom = Vector3::dotProduct(bp, bc);
+    const float uDenom = Vector3::dotProduct(cp, b - c);
+
+    if(sDenom <= 0.f && uNom <= 0.f)
+    {
+        return b;
+    }
+
+    if(tDenom <= 0.f && uDenom <= 0.f)
+    {
+        return c;
+    }
+
+    const Vector3 n = Vector3::crossProduct(ab, ac);
+    const float vC = Vector3::dotProduct(n, Vector3::crossProduct(a - p, b - p));
+
+    if(vC <= 0.f && sNom >= 0.f && sDenom >= 0.f)
+    {
+        return a + sNom / (sNom + sDenom) * ab;
+    }
+
+    const float vA = Vector3::dotProduct(n, Vector3::crossProduct(b - p, c - p));
+    if (vA <= 0.f && uNom >= 0.f && uDenom >= 0.f)
+    {
+        return b + uNom / (uNom + uDenom) * bc;
+    }
+
+    const float vB = Vector3::dotProduct(n, Vector3::crossProduct(c - p, a - p));
+    if (vB <= 0.f && tNom >= 0.f && tDenom >= 0.f)
+    {
+        return a + tNom / (tNom + tDenom) * ac;
+    }
+
+    //P projects inside the triangle face
+    const float u = vA / (vA + vB + vC);
+    const float v = vB / (vA + vB + vC);
+    const float w = 1.f - u - v;
+    return u*a + v*b + w*c;
+}
+
 #endif
