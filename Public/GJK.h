@@ -86,4 +86,55 @@ Vector3 getClosestPointOnTriangle(const Vector3& a, const Vector3& b, const Vect
     return u*a + v*b + w*c;
 }
 
+/** Determines whether two points are on opposing sides of a face */
+bool pointsOnOpposingFaceSides(const Vector3& a, const Vector3& b, const Vector3& c, const Vector3& p1, const Vector3& p2)
+{
+    const Vector3 faceNormal = Vector3::crossProduct(b-a,c-a);
+    const float signp1 = Vector3::dotProduct(p1 - a, faceNormal);
+    const float signp2 = Vector3::dotProduct(p2 - a, faceNormal);
+    return signp1 * signp2 < 0.f;
+}
+
+Vector3 getClosestPointOnTetrahedron(const Vector3& a, const Vector3& b, const Vector3& c, const Vector3& d, const Vector3& p)
+{
+    //We compute the closest point on each triangle and return the shortest. Points within the tetrahedron are of course the closest
+    Vector3 closestPt = p;
+    float shortestDist2 = FLT_MAX;
+
+    if(pointsOnOpposingFaceSides(a,b,c,d,p))
+    {
+        const Vector3 closestABC = getClosestPointOnTriangle(a,b,c,p);
+        const float dist2 = (closestABC - p).length2();
+        if(dist2 < shortestDist2)
+        {
+            shortestDist2 = dist2;
+            closestPt = closestABC;
+        }
+    }
+
+    if (pointsOnOpposingFaceSides(a, b, d, c, p))
+    {
+        const Vector3 closestABD = getClosestPointOnTriangle(a, b, d, p);
+        const float dist2 = (closestABD - p).length2();
+        if (dist2 < shortestDist2)
+        {
+            shortestDist2 = dist2;
+            closestPt = closestABD;
+        }
+    }
+
+    if (pointsOnOpposingFaceSides(b, d, c, a, p))
+    {
+        const Vector3 closestBDC = getClosestPointOnTriangle(b, d, c, p);
+        const float dist2 = (closestBDC - p).length2();
+        if (dist2 < shortestDist2)
+        {
+            shortestDist2 = dist2;
+            closestPt = closestBDC;
+        }
+    }
+
+    return closestPt;
+}
+
 #endif

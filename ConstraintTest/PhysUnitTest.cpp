@@ -91,4 +91,18 @@ TEST_CASE("GeometryTests", "[physics]")
    REQUIRE(Vector3::isNearlyEqual(b, getClosestPointOnTriangle(a,b,c,b)));
    REQUIRE(Vector3::isNearlyEqual(c, getClosestPointOnTriangle(a,b,c,c)));
    REQUIRE(Vector3::isNearlyEqual(Vector3(11.f, 11.f, 12.f), getClosestPointOnTriangle(a,b,c,Vector3(11.f, 11.f, 12.f))));
+   REQUIRE(Vector3::isNearlyEqual(a, getClosestPointOnTriangle(a,b,b,a)));
+   REQUIRE(Vector3::isNearlyEqual(b, getClosestPointOnTriangle(a,b,b,b)));
+   REQUIRE(Vector3::isNearlyEqual(b, getClosestPointOnTriangle(b,b,b,b)));
+   REQUIRE(Vector3::isNearlyEqual(b, getClosestPointOnTriangle(b,b,b,c)));
+   REQUIRE(Vector3::isNearlyEqual(Vector3(15.f, 11.f, 12.f), getClosestPointOnTriangle(a,b,b,Vector3(15.f, 11.f, 12.f))));
+
+   Vector3 d(0.f);
+   REQUIRE(Vector3::isNearlyEqual(a, getClosestPointOnTetrahedron(a,b,c,d,a)));
+   REQUIRE(Vector3::isNearlyEqual(b, getClosestPointOnTetrahedron(a,b,c,d,b)));
+   REQUIRE(Vector3::isNearlyEqual(c, getClosestPointOnTetrahedron(a,b,c,d,c)));
+   REQUIRE(Vector3::isNearlyEqual(d, getClosestPointOnTetrahedron(a,b,c,d,d)));
+   REQUIRE(Vector3::isNearlyEqual(c, getClosestPointOnTetrahedron(a,b,c,d,Vector3(20.f, 20.f, 20.f))));
+   REQUIRE(Vector3::isNearlyEqual(Vector3(15.f, 15.f, 12.f), getClosestPointOnTetrahedron(a,b,c,d,Vector3(15.f, 15.f, 20.f))));
+   REQUIRE(Vector3::isNearlyEqual(Vector3(15.f, 15.f, 10.f), getClosestPointOnTetrahedron(a,b,c,d,Vector3(15.f, 15.f, 10.f))));
 }
