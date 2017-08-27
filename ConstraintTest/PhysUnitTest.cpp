@@ -105,4 +105,14 @@ TEST_CASE("GeometryTests", "[physics]")
    REQUIRE(Vector3::isNearlyEqual(c, getClosestPointOnTetrahedron(a,b,c,d,Vector3(20.f, 20.f, 20.f))));
    REQUIRE(Vector3::isNearlyEqual(Vector3(15.f, 15.f, 12.f), getClosestPointOnTetrahedron(a,b,c,d,Vector3(15.f, 15.f, 20.f))));
    REQUIRE(Vector3::isNearlyEqual(Vector3(15.f, 15.f, 10.f), getClosestPointOnTetrahedron(a,b,c,d,Vector3(15.f, 15.f, 10.f))));
+
+   Sphere sphere(10.f, Transform(Vector3(1.f, 2.f, 3.f), Quaternion::identity()));
+   REQUIRE(Vector3::isNearlyEqual(support(sphere, Vector3(1.f, 0.f, 0.f)), Vector3(11.f, 2.f, 3.f)));
+   REQUIRE(Vector3::isNearlyEqual(support(sphere, Vector3(-1.f, -1.f, 0.f)), Vector3(1.f - 10.f*sqrt(2.f)/2.f, 2.f - 10.f*sqrt(2.f)/2.f, 3.f)));
+
+   Box box(Vector3(1.f, 2.f, 3.f), Transform(Vector3(10.f, 20.f, 30.f), Quaternion::fromAxisAndAngle(Vector3(0.f, 0.f, 1.f), PI_OVER_TWO)));
+   REQUIRE(Vector3::isNearlyEqual(support(box, Vector3(1.f, 0.f, 0.f)), Vector3(12.f, 21.f, 33.f)));
+
+   Box box2(Vector3(1.f, 2.f, 3.f), Transform(Vector3(10.f, 20.f, 30.f), Quaternion::fromAxisAndAngle(Vector3(0.f, 0.f, 1.f), PI_OVER_TWO*0.5f)));
+   REQUIRE(Vector3::isNearlyEqual(support(box2, Vector3(1.f, 0.f, 0.f)), Vector3(10.f + sqrt(2.f)/2.f, 22.1213207f, 33.f)));
 }

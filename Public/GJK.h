@@ -2,6 +2,7 @@
 #define OC_GJK
 
 #include "Vector3.h"
+#include "Shape.h"
 
 Vector3 getClosestPointOnLineSegment(const Vector3& lineStart, const Vector3& lineEnd, const Vector3& pt)
 {
@@ -135,6 +136,28 @@ Vector3 getClosestPointOnTetrahedron(const Vector3& a, const Vector3& b, const V
     }
 
     return closestPt;
+}
+
+Vector3 support(const Sphere& sphere, const Vector3& dir)
+{
+    return sphere.localTM.translation + sphere.radius * dir.getNormal();
+}
+
+Vector3 support(const Box& box, const Vector3& dir)
+{
+    float bestAlong = -FLT_MAX;
+    const Vector3 orientedExtents = box.localTM.transformVector(box.halfExtents);
+    //TODO: move dir into local space instead of checking for same direction
+    Vector3 choose = orientedExtents;
+    for(int i=0; i<3; ++i)
+    {
+        if (dir[i] * orientedExtents[i] < 0)
+        {
+            choose[i] *= -1;
+        }
+    }
+    
+    return choose + box.localTM.translation;
 }
 
 #endif
