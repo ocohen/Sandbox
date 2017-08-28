@@ -160,4 +160,25 @@ Vector3 support(const Box& box, const Vector3& dir)
     return choose + box.localTM.translation;
 }
 
+Vector3 support(const ShapeUnion& shape, const Vector3& dir)
+{
+    switch(shape.asShape().type)
+    {
+    case EShapeType::Box: return support(shape.asBox(), dir);
+    case EShapeType::Sphere: return support(shape.asSphere(), dir);
+    default: return Vector3(0.f);
+    }
+}
+
+Vector3 support(const ShapeUnion& a, const Transform& aBody2World, const ShapeUnion& b, const Transform& bBody2World, const Vector3& dir)
+{
+    const Transform A = aBody2World * a.asShape().localTM;
+    const Transform B = bBody2World * b.asShape().localTM;
+    const Transform BLocal2A = aBody2World.inverseTransform(A.inverseTransform(B));
+    ShapeUnion bLocalToA = b;
+    bLocalToA.asShape().localTM = BLocal2A;
+
+    return support(a, dir) - support(bLocalToA, -dir);
+}
+
 #endif

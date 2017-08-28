@@ -115,4 +115,13 @@ TEST_CASE("GeometryTests", "[physics]")
 
    Box box2(Vector3(1.f, 2.f, 3.f), Transform(Vector3(10.f, 20.f, 30.f), Quaternion::fromAxisAndAngle(Vector3(0.f, 0.f, 1.f), PI_OVER_TWO*0.5f)));
    REQUIRE(Vector3::isNearlyEqual(support(box2, Vector3(1.f, 0.f, 0.f)), Vector3(10.f + sqrt(2.f)/2.f, 22.1213207f, 33.f)));
+
+   {
+       Sphere s1(10.f, Transform(Vector3(1.f, 0.f, 0.f), Quaternion::identity()));
+       Sphere s2(5.f, Transform(Vector3(-5.f, 0.f, 0.f), Quaternion::identity()));
+       REQUIRE(Vector3::isNearlyEqual(support(s1, Transform::identity(), s2, Transform::identity(), Vector3(-1.f, 0.f, 0.f)), Vector3(-8.f, 0.f, 0.f)));
+       REQUIRE(Vector3::isNearlyEqual(support(s1, Transform::identity(), s2, Transform::identity(), Vector3(1.f, 0.f, 0.f)), Vector3(22.f, 0.f, 0.f)));
+       REQUIRE(Vector3::isNearlyEqual(support(s1, Transform::identity(), s2, Transform::identity(), Vector3(0.f, 1.f, 0.f)), Vector3(7.f, 15.f, 0.f)));
+       REQUIRE(Vector3::isNearlyEqual(support(s1, Transform::identity(), s2, Transform::identity(), Vector3(0.f, -1.f, 0.f)), Vector3(7.f, -15.f, 0.f)));
+   }
 }
