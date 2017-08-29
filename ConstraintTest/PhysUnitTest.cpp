@@ -123,5 +123,9 @@ TEST_CASE("GeometryTests", "[physics]")
        REQUIRE(Vector3::isNearlyEqual(support(s1, Transform::identity(), s2, Transform::identity(), Vector3(1.f, 0.f, 0.f)), Vector3(22.f, 0.f, 0.f)));
        REQUIRE(Vector3::isNearlyEqual(support(s1, Transform::identity(), s2, Transform::identity(), Vector3(0.f, 1.f, 0.f)), Vector3(7.f, 15.f, 0.f)));
        REQUIRE(Vector3::isNearlyEqual(support(s1, Transform::identity(), s2, Transform::identity(), Vector3(0.f, -1.f, 0.f)), Vector3(7.f, -15.f, 0.f)));
+
+       REQUIRE(gjkOverlapping(s1, Transform::identity(), s2, Transform::identity()));
+       REQUIRE(!gjkOverlapping(s1, Transform(Vector3(9.1f, 0.f, 0.f), Quaternion::identity()), s2, Transform::identity()));
+       REQUIRE(gjkOverlapping(s1, Transform(Vector3(8.9f, 0.f, 0.f), Quaternion::identity()), s2, Transform::identity()));
    }
 }

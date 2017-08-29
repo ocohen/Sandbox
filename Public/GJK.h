@@ -172,13 +172,117 @@ Vector3 support(const ShapeUnion& shape, const Vector3& dir)
 
 Vector3 support(const ShapeUnion& a, const Transform& aBody2World, const ShapeUnion& b, const Transform& bBody2World, const Vector3& dir)
 {
-    const Transform A = aBody2World * a.asShape().localTM;
+    const Transform localA = a.asShape().localTM;
     const Transform B = bBody2World * b.asShape().localTM;
-    const Transform BLocal2A = aBody2World.inverseTransform(A.inverseTransform(B));
+    const Transform BLocal2A = localA.inverseTransform(aBody2World.inverseTransform(B));
     ShapeUnion bLocalToA = b;
     bLocalToA.asShape().localTM = BLocal2A;
 
-    return support(a, dir) - support(bLocalToA, -dir);
+    ShapeUnion aLocalToA = a;
+    aLocalToA.asShape().localTM = Transform::identity();
+    const Vector3 dirLocalToA = localA.rotation.getInverse() * dir;
+
+    return support(aLocalToA, dirLocalToA) - support(bLocalToA, -dirLocalToA);
+}
+
+Vector3 getClosestToOriginInSimplex(const Vector3* simplex, int dimension)
+{
+    switch (dimension)
+    {
+    case 0:
+    {
+        return simplex[0];
+    }
+    case 1:
+    {
+        return getClosestPointOnLineSegment(simplex[0], simplex[1], Vector3(0.f));
+    }
+    case 2:
+    {
+        return getClosestPointOnTriangle(simplex[0], simplex[1], simplex[2], Vector3(0.f));
+    }
+    case 3:
+        return getClosestPointOnTetrahedron(simplex[0], simplex[1], simplex[2], simplex[3], Vector3(0.f));
+    default:
+        assert(false && "Simplex of dimension 4 or bigger");
+        return Vector3(0.f);
+    }
+}
+
+void reduceSimplex(Vector3* simplex, int& dimension, const Vector3& closestPt)
+{
+    switch(dimension)
+    {
+    case 0:
+    case 1:
+        return;
+    case 2:
+    {
+        if(Vector3::isNearlyEqual(closestPt, getClosestPointOnLineSegment(simplex[1], simplex[2], closestPt)))
+        {
+            simplex[0] = simplex[2];
+        }
+        else if(Vector3::isNearlyEqual(closestPt, getClosestPointOnLineSegment(simplex[0], simplex[2], closestPt)))
+        {
+            simplex[1] = simplex[2];
+        }
+
+        dimension = 1;
+        return;
+    }
+    case 3:
+    {
+        if(Vector3::isNearlyEqual(closestPt, getClosestPointOnTriangle(simplex[1], simplex[2], simplex[3], closestPt)))
+        {
+            simplex[0] = simplex[3];
+        }
+        else if(Vector3::isNearlyEqual(closestPt, getClosestPointOnTriangle(simplex[0], simplex[2], simplex[3], closestPt)))
+        {
+            simplex[1] = simplex[3];
+        }
+        else if (Vector3::isNearlyEqual(closestPt, getClosestPointOnTriangle(simplex[0], simplex[1], simplex[3], closestPt)))
+        {
+            simplex[2] = simplex[3];
+        }
+
+        dimension = 2;
+        return;
+    }
+    default:
+        assert(false && "Simplex of dimension 4 or higher not supported");
+    }
+}
+
+bool gjkOverlapping(const ShapeUnion& a, const Transform& aBody2World, const ShapeUnion& b, const Transform& bBody2World)
+{
+    Vector3 simplex[4];
+    simplex[0] = support(a, aBody2World, b, bBody2World, Vector3(1.f, 0.f, 0.f));
+    int dimension = 0;
+
+    while(true)
+    {
+       Vector3 closestPt = getClosestToOriginInSimplex(simplex, dimension);
+       if(Vector3::isNearlyEqual(closestPt, Vector3(0.f)))
+       {
+           return true;
+       }
+       else
+       {
+           reduceSimplex(simplex, dimension, closestPt);
+       }
+
+       const Vector3 searchDir = -closestPt.getNormal();
+       Vector3 newVertex = support(a, aBody2World, b, bBody2World, searchDir);    //TODO: no point in constantly re localizing the transform of b to a
+
+       if(newVertex.dotProduct(searchDir) > closestPt.dotProduct(searchDir))
+       {
+           simplex[++dimension] = newVertex;
+       }
+       else
+       {
+           return false;
+       }
+    }
 }
 
 #endif
