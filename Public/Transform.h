@@ -8,7 +8,7 @@ template <typename Scaler>
 struct TTransform
 {
 	TTransform(){}
-	TTransform(const TVector3<Scaler>& inTranslation, const TQuaternion<Scaler>& inRotation) : translation(inTranslation), rotation(inRotation){}
+    TTransform(const TVector3<Scaler>& inTranslation, const TQuaternion<Scaler> inRotation = TQuaternion<Scaler>::identity()) : translation(inTranslation), rotation(inRotation){}
 
     //Apply rotation
     TVector3<Scaler> transformVector(const TVector3<Scaler>& rhs) const

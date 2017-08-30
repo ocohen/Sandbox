@@ -138,15 +138,15 @@ Vector3 getClosestPointOnTetrahedron(const Vector3& a, const Vector3& b, const V
     return closestPt;
 }
 
-Vector3 support(const Sphere& sphere, const Vector3& dir)
+Vector3 support(const Sphere& sphere, const Transform& sphereTM, const Vector3& dir)
 {
-    return sphere.localTM.translation + sphere.radius * dir.getNormal();
+    return sphereTM.translation + sphere.radius * dir.getNormal();
 }
 
-Vector3 support(const Box& box, const Vector3& dir)
+Vector3 support(const Box& box, const Transform& boxTM, const Vector3& dir)
 {
     float bestAlong = -FLT_MAX;
-    const Vector3 orientedExtents = box.localTM.transformVector(box.halfExtents);
+    const Vector3 orientedExtents = boxTM.transformVector(box.halfExtents);
     //TODO: move dir into local space instead of checking for same direction
     Vector3 choose = orientedExtents;
     for(int i=0; i<3; ++i)
@@ -157,32 +157,22 @@ Vector3 support(const Box& box, const Vector3& dir)
         }
     }
     
-    return choose + box.localTM.translation;
+    return choose + boxTM.translation;
 }
 
-Vector3 support(const ShapeUnion& shape, const Vector3& dir)
+Vector3 support(const ShapeUnion& shape, const Transform& shapeTM, const Vector3& dir)
 {
     switch(shape.asShape().type)
     {
-    case EShapeType::Box: return support(shape.asBox(), dir);
-    case EShapeType::Sphere: return support(shape.asSphere(), dir);
+    case EShapeType::Box: return support(shape.asBox(),shapeTM, dir);
+    case EShapeType::Sphere: return support(shape.asSphere(),shapeTM, dir);
     default: return Vector3(0.f);
     }
 }
 
-Vector3 support(const ShapeUnion& a, const Transform& aBody2World, const ShapeUnion& b, const Transform& bBody2World, const Vector3& dir)
+Vector3 supportAMinusB(const ShapeUnion& a, const ShapeUnion& b, const Transform& bLocalToATM, const Vector3& dir)
 {
-    const Transform localA = a.asShape().localTM;
-    const Transform B = bBody2World * b.asShape().localTM;
-    const Transform BLocal2A = localA.inverseTransform(aBody2World.inverseTransform(B));
-    ShapeUnion bLocalToA = b;
-    bLocalToA.asShape().localTM = BLocal2A;
-
-    ShapeUnion aLocalToA = a;
-    aLocalToA.asShape().localTM = Transform::identity();
-    const Vector3 dirLocalToA = localA.rotation.getInverse() * dir;
-
-    return support(aLocalToA, dirLocalToA) - support(bLocalToA, -dirLocalToA);
+    return support(a, Transform::identity(), dir) - support(b,bLocalToATM, -dir);
 }
 
 Vector3 getClosestToOriginInSimplex(const Vector3* simplex, int dimension)
@@ -253,10 +243,12 @@ void reduceSimplex(Vector3* simplex, int& dimension, const Vector3& closestPt)
     }
 }
 
-bool gjkOverlapping(const ShapeUnion& a, const Transform& aBody2World, const ShapeUnion& b, const Transform& bBody2World)
+bool gjkOverlapping(const ShapeUnion& a, const Transform& a2World, const ShapeUnion& b, const Transform& b2World)
 {
+    const Transform bLocal2A = a2World.inverseTransform(b2World);
+
     Vector3 simplex[4];
-    simplex[0] = support(a, aBody2World, b, bBody2World, Vector3(1.f, 0.f, 0.f));
+    simplex[0] = supportAMinusB(a, b, bLocal2A, Vector3(1.f, 0.f, 0.f));
     int dimension = 0;
 
     while(true)
@@ -272,9 +264,9 @@ bool gjkOverlapping(const ShapeUnion& a, const Transform& aBody2World, const Sha
        }
 
        const Vector3 searchDir = -closestPt.getNormal();
-       Vector3 newVertex = support(a, aBody2World, b, bBody2World, searchDir);    //TODO: no point in constantly re localizing the transform of b to a
+       Vector3 newVertex = supportAMinusB(a, b, bLocal2A, searchDir);
 
-       if(newVertex.dotProduct(searchDir) > closestPt.dotProduct(searchDir))
+       if((newVertex - closestPt).dotProduct(searchDir) > 0.1f)   //need epsilon for rounded edges where we can make very tiny progress
        {
            simplex[++dimension] = newVertex;
        }

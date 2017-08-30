@@ -49,10 +49,10 @@ TEST_CASE("Constraint", "[physics]")
 {
     const Vector3 b1(0.f);
     RigidBodyDesc simDesc;
-    simDesc.shapes.push_back(Sphere(1.f, Transform(b1, Quaternion::identity())));
+    simDesc.shapes.push_back(Sphere(1.f, Transform(b1)));
     
     const Vector3 b2(3.f, 2.f, 0.f);
-    RigidBody sim(Transform(b2, Quaternion::identity()), simDesc);
+    RigidBody sim(Transform(b2), simDesc);
     sim.invInertia = Vector3(1.f);
     sim.invMass = 1.f;
 
@@ -63,7 +63,7 @@ TEST_CASE("Constraint", "[physics]")
     RigidBody kin(Transform::identity(), kinDesc);
 
     const Vector3 r2(-1.f, 0.f, 0.f);
-    Constraint c(&kin, Transform::identity(), &sim, Transform(r2, Quaternion::identity()));
+    Constraint c(&kin, Transform::identity(), &sim, Transform(r2));
     
     sim.angularVelocity = Vector3(0.f, 0.f, 10.f);
     c.prepareConstraint();
@@ -106,26 +106,25 @@ TEST_CASE("GeometryTests", "[physics]")
    REQUIRE(Vector3::isNearlyEqual(Vector3(15.f, 15.f, 12.f), getClosestPointOnTetrahedron(a,b,c,d,Vector3(15.f, 15.f, 20.f))));
    REQUIRE(Vector3::isNearlyEqual(Vector3(15.f, 15.f, 10.f), getClosestPointOnTetrahedron(a,b,c,d,Vector3(15.f, 15.f, 10.f))));
 
-   Sphere sphere(10.f, Transform(Vector3(1.f, 2.f, 3.f), Quaternion::identity()));
-   REQUIRE(Vector3::isNearlyEqual(support(sphere, Vector3(1.f, 0.f, 0.f)), Vector3(11.f, 2.f, 3.f)));
-   REQUIRE(Vector3::isNearlyEqual(support(sphere, Vector3(-1.f, -1.f, 0.f)), Vector3(1.f - 10.f*sqrt(2.f)/2.f, 2.f - 10.f*sqrt(2.f)/2.f, 3.f)));
+   Sphere sphere(10.f, Transform::identity());
+   REQUIRE(Vector3::isNearlyEqual(support(sphere,Transform(Vector3(1.f, 2.f, 3.f)), Vector3(1.f, 0.f, 0.f)), Vector3(11.f, 2.f, 3.f)));
+   REQUIRE(Vector3::isNearlyEqual(support(sphere, Transform(Vector3(1.f, 2.f, 3.f)), Vector3(-1.f, -1.f, 0.f)), Vector3(1.f - 10.f*sqrt(2.f)/2.f, 2.f - 10.f*sqrt(2.f)/2.f, 3.f)));
 
-   Box box(Vector3(1.f, 2.f, 3.f), Transform(Vector3(10.f, 20.f, 30.f), Quaternion::fromAxisAndAngle(Vector3(0.f, 0.f, 1.f), PI_OVER_TWO)));
-   REQUIRE(Vector3::isNearlyEqual(support(box, Vector3(1.f, 0.f, 0.f)), Vector3(12.f, 21.f, 33.f)));
+   Box box(Vector3(1.f, 2.f, 3.f), Transform::identity());
+   REQUIRE(Vector3::isNearlyEqual(support(box,Transform(Vector3(10.f, 20.f, 30.f), Quaternion::fromAxisAndAngle(Vector3(0.f, 0.f, 1.f), PI_OVER_TWO)), Vector3(1.f, 0.f, 0.f)), Vector3(12.f, 21.f, 33.f)));
 
-   Box box2(Vector3(1.f, 2.f, 3.f), Transform(Vector3(10.f, 20.f, 30.f), Quaternion::fromAxisAndAngle(Vector3(0.f, 0.f, 1.f), PI_OVER_TWO*0.5f)));
-   REQUIRE(Vector3::isNearlyEqual(support(box2, Vector3(1.f, 0.f, 0.f)), Vector3(10.f + sqrt(2.f)/2.f, 22.1213207f, 33.f)));
+   Box box2(Vector3(1.f, 2.f, 3.f), Transform::identity());
+   REQUIRE(Vector3::isNearlyEqual(support(box2,Transform(Vector3(10.f, 20.f, 30.f), Quaternion::fromAxisAndAngle(Vector3(0.f, 0.f, 1.f), PI_OVER_TWO*0.5f)), Vector3(1.f, 0.f, 0.f)), Vector3(10.f + sqrt(2.f)/2.f, 22.1213207f, 33.f)));
 
    {
-       Sphere s1(10.f, Transform(Vector3(1.f, 0.f, 0.f), Quaternion::identity()));
-       Sphere s2(5.f, Transform(Vector3(-5.f, 0.f, 0.f), Quaternion::identity()));
-       REQUIRE(Vector3::isNearlyEqual(support(s1, Transform::identity(), s2, Transform::identity(), Vector3(-1.f, 0.f, 0.f)), Vector3(-8.f, 0.f, 0.f)));
-       REQUIRE(Vector3::isNearlyEqual(support(s1, Transform::identity(), s2, Transform::identity(), Vector3(1.f, 0.f, 0.f)), Vector3(22.f, 0.f, 0.f)));
-       REQUIRE(Vector3::isNearlyEqual(support(s1, Transform::identity(), s2, Transform::identity(), Vector3(0.f, 1.f, 0.f)), Vector3(7.f, 15.f, 0.f)));
-       REQUIRE(Vector3::isNearlyEqual(support(s1, Transform::identity(), s2, Transform::identity(), Vector3(0.f, -1.f, 0.f)), Vector3(7.f, -15.f, 0.f)));
+       Sphere s1(10.f, Transform::identity());
+       Sphere s2(5.f,  Transform::identity());
+       REQUIRE(gjkOverlapping(s1,Transform(Vector3(1.f, 0.f, 0.f)), s2, Transform(Vector3(-5.f, 0.f, 0.f))));
+       REQUIRE(!gjkOverlapping(s1, Transform(Vector3(10.1f, 0.f, 0.f)), s2, Transform(Vector3(-5.f, 0.f, 0.f))));
+       REQUIRE(gjkOverlapping(s1, Transform(Vector3(9.9f, 0.f, 0.f)), s2, Transform(Vector3(-5.f, 0.f, 0.f))));
 
-       REQUIRE(gjkOverlapping(s1, Transform::identity(), s2, Transform::identity()));
-       REQUIRE(!gjkOverlapping(s1, Transform(Vector3(9.1f, 0.f, 0.f), Quaternion::identity()), s2, Transform::identity()));
-       REQUIRE(gjkOverlapping(s1, Transform(Vector3(8.9f, 0.f, 0.f), Quaternion::identity()), s2, Transform::identity()));
+       Box b1(Vector3(10.f, 20.f, 1.f), Transform::identity());
+       REQUIRE(gjkOverlapping(s1,Transform(Vector3(9.9f, 0.f, 0.f)), b1, Transform(Vector3(-10.f, 0.f, 0.f))));
+       REQUIRE(!gjkOverlapping(s1,Transform(Vector3(10.1f, 0.f, 0.f)), b1, Transform(Vector3(-10.f, 0.f, 0.f))));
    }
 }
