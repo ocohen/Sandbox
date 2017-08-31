@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.7)
 project(RenderTest)
 
-set(CMAKE_MODULE_PATH../CMake)
-
 include_directories(../Public)
 include_directories(../External)
 
