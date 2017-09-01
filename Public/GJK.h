@@ -250,6 +250,7 @@ bool gjkOverlapping(const ShapeUnion& a, const Transform& a2World, const ShapeUn
     Vector3 simplex[4];
     simplex[0] = supportAMinusB(a, b, bLocal2A, Vector3(1.f, 0.f, 0.f));
     int dimension = 0;
+    float prevDist = FLT_MAX;
 
     while(true)
     {
@@ -265,10 +266,19 @@ bool gjkOverlapping(const ShapeUnion& a, const Transform& a2World, const ShapeUn
 
        const Vector3 searchDir = -closestPt.getNormal();
        Vector3 newVertex = supportAMinusB(a, b, bLocal2A, searchDir);
-
-       if((newVertex - closestPt).dotProduct(searchDir) > 0.1f)   //need epsilon for rounded edges where we can make very tiny progress
+       const float progress = (newVertex - closestPt).dotProduct(searchDir);
+       const float distFromOrigin = newVertex.length();
+       if(progress > 0.1f)   //need epsilon for rounded edges where we can make very tiny progress
        {
-           simplex[++dimension] = newVertex;
+           if(prevDist > distFromOrigin + 0.1f)
+           {
+               simplex[++dimension] = newVertex;
+               prevDist = distFromOrigin;
+           }
+           else
+           {
+                return false;
+           }
        }
        else
        {

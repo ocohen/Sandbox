@@ -1,5 +1,9 @@
 #include <SDL.h>
 #include "Renderer.h"
+#include "Shape.h"
+#include "ShapeRenderer.h"
+#include <vector>
+#include "GJK.h"
  
 int main(int argc, char *argv[])
 {
@@ -17,13 +21,25 @@ int main(int argc, char *argv[])
 
     SDL_Event event;
     bool quit = false;
-    float r = 0.f;
     bool bMouseDown = false;
     float offsetX = 0.f;
     float offsetY = 0.f;
-    bool bSimulate = false;
-    int frame = 0;
-    bool bDumpLogs = false;;
+
+    Sphere sphere(10.f, Transform::identity());
+    Box box(Vector3(10.f, 20.f, 1.f), Transform::identity());
+
+    std::vector<ShapeUnion> shapes;
+    shapes.push_back(sphere);
+    shapes.push_back(box);
+
+    Transform sphereTM = Transform::identity();
+    Transform boxTM(Vector3(21.f, 0.f, 0.f));
+
+    std::vector<Transform> tms;
+    tms.push_back(sphereTM);
+    tms.push_back(boxTM);
+
+    Vector3 green(0.f, 1.f, 0.f);
 
     while (!quit)
     {
@@ -33,10 +49,51 @@ int main(int argc, char *argv[])
             {
                 quit = 1;
             }
+
+            if (event.type == SDL_MOUSEBUTTONDOWN)
+            {
+                bMouseDown = true;
+            }
+
+            if (event.type == SDL_MOUSEBUTTONUP)
+            {
+                bMouseDown = false;
+            }
+
+            if (event.type == SDL_MOUSEMOTION)
+            {
+                if(bMouseDown)
+                {
+                    offsetX += event.motion.xrel;
+                    offsetY += -event.motion.yrel;
+                }
+            }
         }
-            
-                
+
         renderer.clear();
+
+        if(tms.size() > 0)
+        {
+            tms[0].translation += Vector3(offsetX, offsetY, 0.f);
+            offsetX = offsetY = 0.f;
+        }
+
+        for(int i=0; i< shapes.size(); ++i)
+        {
+            bool bOverlap = false;
+            for(int j=0; j<shapes.size(); ++j)
+            {
+                if(j == i){ continue; } //skip self
+
+                if(gjkOverlapping(ShapeUnion(shapes[i]), tms[i], ShapeUnion(shapes[j]), tms[j]))
+                {
+                    bOverlap = true;
+                    break;
+                }
+            }
+            renderShape(shapes[i].asShape(), tms[i], renderer, bOverlap ? &green : nullptr);
+        }
+                
         renderer.flush();
 
         SDL_GL_SwapWindow(displayWindow);
