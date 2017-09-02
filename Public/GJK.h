@@ -252,6 +252,10 @@ bool gjkOverlapping(const ShapeUnion& a, const Transform& a2World, const ShapeUn
     int dimension = 0;
     float prevDist = FLT_MAX;
 
+    Vector3 vertsSeen[128];
+    int numVertsSeen = 0;
+    int lastVertSeen = 0;
+
     while(true)
     {
        Vector3 closestPt = getClosestToOriginInSimplex(simplex, dimension);
@@ -268,12 +272,27 @@ bool gjkOverlapping(const ShapeUnion& a, const Transform& a2World, const ShapeUn
        Vector3 newVertex = supportAMinusB(a, b, bLocal2A, searchDir);
        const float progress = (newVertex - closestPt).dotProduct(searchDir);
        const float distFromOrigin = newVertex.length();
-       if(progress > 0.1f)   //need epsilon for rounded edges where we can make very tiny progress
+       if(progress > 1.f)   //need epsilon for rounded edges where we can make very tiny progress
        {
-           if(prevDist > distFromOrigin + 0.1f)
+           if(true || prevDist > distFromOrigin + 0.1f)
            {
                simplex[++dimension] = newVertex;
+               for(int i=0; i<numVertsSeen; ++i)
+               {
+                   if(Vector3::isNearlyEqual(vertsSeen[i], newVertex))
+                   {
+                       return false;
+                   }
+               }
                prevDist = distFromOrigin;
+
+               vertsSeen[lastVertSeen] = newVertex;
+               const size_t sizeOfSeen = (sizeof(vertsSeen) / sizeof(vertsSeen[0]));
+               lastVertSeen = (lastVertSeen + 1) % sizeOfSeen;
+               if(numVertsSeen <sizeOfSeen)
+               {
+                   ++numVertsSeen;
+               }
            }
            else
            {
