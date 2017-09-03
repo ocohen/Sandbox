@@ -212,13 +212,18 @@ void reduceSimplex(Vector3* simplex, int& dimension, const Vector3& closestPt)
         if(Vector3::isNearlyEqual(closestPt, getClosestPointOnLineSegment(simplex[1], simplex[2], closestPt)))
         {
             simplex[0] = simplex[2];
+            dimension = 1;
         }
         else if(Vector3::isNearlyEqual(closestPt, getClosestPointOnLineSegment(simplex[0], simplex[2], closestPt)))
         {
             simplex[1] = simplex[2];
+            dimension = 1;
+        }
+        else if(Vector3::isNearlyEqual(closestPt, getClosestPointOnLineSegment(simplex[0], simplex[1], closestPt)))
+        {
+            dimension = 1;
         }
 
-        dimension = 1;
         return;
     }
     case 3:
@@ -226,17 +231,23 @@ void reduceSimplex(Vector3* simplex, int& dimension, const Vector3& closestPt)
         if(Vector3::isNearlyEqual(closestPt, getClosestPointOnTriangle(simplex[1], simplex[2], simplex[3], closestPt)))
         {
             simplex[0] = simplex[3];
+            dimension = 2;
         }
         else if(Vector3::isNearlyEqual(closestPt, getClosestPointOnTriangle(simplex[0], simplex[2], simplex[3], closestPt)))
         {
             simplex[1] = simplex[3];
+            dimension = 2;
         }
         else if (Vector3::isNearlyEqual(closestPt, getClosestPointOnTriangle(simplex[0], simplex[1], simplex[3], closestPt)))
         {
             simplex[2] = simplex[3];
+            dimension = 2;
+        }
+        else if (Vector3::isNearlyEqual(closestPt, getClosestPointOnTriangle(simplex[0], simplex[1], simplex[2], closestPt)))
+        {
+            dimension = 2;
         }
 
-        dimension = 2;
         return;
     }
     default:
@@ -302,6 +313,7 @@ bool gjkOverlappingImp(const ShapeUnion& a, const Transform& a2World, const Shap
     int numVertsSeen = 0;
     int lastVertSeen = 0;
     int iterationCount = 0;
+    bool trackVerts = false;
 
     while(true)
     {
@@ -336,30 +348,34 @@ bool gjkOverlappingImp(const ShapeUnion& a, const Transform& a2World, const Shap
        Vector3 newVertex = supportAMinusB(a, b, bLocal2A, searchDir);
        const float progress = (newVertex - closestPt).dotProduct(searchDir);
        const float distFromOrigin = newVertex.length();
-       if(progress > 1.f)   //need epsilon for rounded edges where we can make very tiny progress
+       if(progress > OC_BIG_EPSILON)   //need epsilon for rounded edges where we can make very tiny progress
        {
            if(true || prevDist > distFromOrigin + 0.1f)
            {
                simplex[++dimension] = newVertex;
-               for(int i=0; i<numVertsSeen; ++i)
-               {
-                   if(Vector3::isNearlyEqual(vertsSeen[i], newVertex))
-                   {
-                       if (debug && debugInfo)
-                       {
-                           debugInfo->perFrameInfo.back().result = GJKDebugPerFrameInfo::NoOverlap;
-                       }
-                       return false;
-                   }
-               }
                prevDist = distFromOrigin;
 
-               vertsSeen[lastVertSeen] = newVertex;
-               const size_t sizeOfSeen = (sizeof(vertsSeen) / sizeof(vertsSeen[0]));
-               lastVertSeen = (lastVertSeen + 1) % sizeOfSeen;
-               if(numVertsSeen <sizeOfSeen)
+               if (trackVerts)
                {
-                   ++numVertsSeen;
+                   for(int i=0; i<numVertsSeen; ++i)
+                   {
+                       if(Vector3::isNearlyEqual(vertsSeen[i], newVertex))
+                       {
+                           if (debug && debugInfo)
+                           {
+                               debugInfo->perFrameInfo.back().result = GJKDebugPerFrameInfo::NoOverlap;
+                           }
+                           return false;
+                       }
+                   }
+
+                   vertsSeen[lastVertSeen] = newVertex;
+                   const size_t sizeOfSeen = (sizeof(vertsSeen) / sizeof(vertsSeen[0]));
+                   lastVertSeen = (lastVertSeen + 1) % sizeOfSeen;
+                   if(numVertsSeen <sizeOfSeen)
+                   {
+                       ++numVertsSeen;
+                   }
                }
            }
            else
