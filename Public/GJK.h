@@ -3,6 +3,7 @@
 
 #include "Vector3.h"
 #include "Shape.h"
+#include "Renderer.h"
 
 Vector3 getClosestPointOnLineSegment(const Vector3& lineStart, const Vector3& lineEnd, const Vector3& pt)
 {
@@ -243,9 +244,54 @@ void reduceSimplex(Vector3* simplex, int& dimension, const Vector3& closestPt)
     }
 }
 
-bool gjkOverlapping(const ShapeUnion& a, const Transform& a2World, const ShapeUnion& b, const Transform& b2World)
+struct GJKDebugPerFrameInfo
+{
+    int dimension;
+    Vector3 simplex[4];
+    Vector3 closestPt;
+    enum EResult
+    {
+        Overlap,
+        NoOverlap,
+        NoTermination
+    } result;
+
+    GJKDebugPerFrameInfo(int inDimension, const Vector3* inSimplex, const Vector3& inClosest)
+        : dimension(inDimension)
+        , closestPt(inClosest)
+        , result(NoTermination)
+    {
+        for(int i=0; i<=inDimension; ++i)
+        {
+            simplex[i] = inSimplex[i];
+        }
+    }
+};
+
+struct GJKDebugInfo
+{
+    int numIterations;
+    std::vector<GJKDebugPerFrameInfo> perFrameInfo;
+
+    int hullResolution;
+    std::vector<Vector3> hullVerts;
+};
+
+template <bool debug>
+bool gjkOverlappingImp(const ShapeUnion& a, const Transform& a2World, const ShapeUnion& b, const Transform& b2World, GJKDebugInfo* debugInfo)
 {
     const Transform bLocal2A = a2World.inverseTransform(b2World);
+
+    if(debug && debugInfo)
+    {
+        //try sweeping a sphere to generate the hull for debug render
+        for(int i=0; i<debugInfo->hullResolution; ++i)
+        {
+            const float theta = i * 2*PI / debugInfo->hullResolution;
+            Vector3 dir(cosf(theta), sinf(theta), 0.f);
+            debugInfo->hullVerts.push_back(supportAMinusB(a, b, bLocal2A, dir));
+        }
+    }
 
     Vector3 simplex[4];
     simplex[0] = supportAMinusB(a, b, bLocal2A, Vector3(1.f, 0.f, 0.f));
@@ -255,12 +301,30 @@ bool gjkOverlapping(const ShapeUnion& a, const Transform& a2World, const ShapeUn
     Vector3 vertsSeen[128];
     int numVertsSeen = 0;
     int lastVertSeen = 0;
+    int iterationCount = 0;
 
     while(true)
     {
-       Vector3 closestPt = getClosestToOriginInSimplex(simplex, dimension);
-       if(Vector3::isNearlyEqual(closestPt, Vector3(0.f)))
+       if(debug && debugInfo && debugInfo->numIterations <= iterationCount)
        {
+           return false;
+       }
+       ++iterationCount;
+
+       Vector3 closestPt = getClosestToOriginInSimplex(simplex, dimension);
+       const bool bContainsOrigin = Vector3::isNearlyEqual(closestPt, Vector3(0.f));
+
+       if(debug && debugInfo)
+       {
+           debugInfo->perFrameInfo.push_back(GJKDebugPerFrameInfo(dimension, simplex, closestPt));
+       }
+
+       if(bContainsOrigin)
+       {
+           if(debug && debugInfo)
+           {
+               debugInfo->perFrameInfo.back().result = GJKDebugPerFrameInfo::Overlap;
+           }
            return true;
        }
        else
@@ -281,6 +345,10 @@ bool gjkOverlapping(const ShapeUnion& a, const Transform& a2World, const ShapeUn
                {
                    if(Vector3::isNearlyEqual(vertsSeen[i], newVertex))
                    {
+                       if (debug && debugInfo)
+                       {
+                           debugInfo->perFrameInfo.back().result = GJKDebugPerFrameInfo::NoOverlap;
+                       }
                        return false;
                    }
                }
@@ -296,14 +364,27 @@ bool gjkOverlapping(const ShapeUnion& a, const Transform& a2World, const ShapeUn
            }
            else
            {
+               if (debug && debugInfo)
+               {
+                   debugInfo->perFrameInfo.back().result = GJKDebugPerFrameInfo::NoOverlap;
+               }
                 return false;
            }
        }
        else
        {
+           if (debug && debugInfo)
+           {
+               debugInfo->perFrameInfo.back().result = GJKDebugPerFrameInfo::NoOverlap;
+           }
            return false;
        }
     }
+}
+
+bool gjkOverlapping(const ShapeUnion& a, const Transform& a2World, const ShapeUnion& b, const Transform& b2World)
+{
+    return gjkOverlappingImp<false>(a, a2World, b, b2World, nullptr);
 }
 
 #endif

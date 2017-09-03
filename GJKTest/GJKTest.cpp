@@ -4,6 +4,7 @@
 #include "ShapeRenderer.h"
 #include <vector>
 #include "GJK.h"
+#include <algorithm>
  
 int main(int argc, char *argv[])
 {
@@ -40,6 +41,11 @@ int main(int argc, char *argv[])
     tms.push_back(boxTM);
 
     Vector3 green(0.f, 1.f, 0.f);
+    Vector3 red(1.f, 0.f, 0.f);
+
+    bool debugEnabled = false;
+    int debugUpToFrame = 0;
+    bool renderShapes = true;
 
     while (!quit)
     {
@@ -68,6 +74,30 @@ int main(int argc, char *argv[])
                     offsetY += -event.motion.yrel;
                 }
             }
+
+            if(event.type == SDL_KEYDOWN)
+            {
+                if(event.key.keysym.sym == SDLK_d)
+                {
+                    debugEnabled = !debugEnabled;
+                }
+                
+                if (event.key.keysym.sym == SDLK_r)
+                {
+                    renderShapes = !renderShapes;
+                }
+
+                if (event.key.keysym.sym == SDLK_1)
+                {
+                    debugUpToFrame -= 1;
+                    debugUpToFrame = debugUpToFrame < 0 ? 0 : debugUpToFrame;
+                }
+
+                if (event.key.keysym.sym == SDLK_2)
+                {
+                    debugUpToFrame += 1;
+                }
+            }
         }
 
         renderer.clear();
@@ -78,6 +108,12 @@ int main(int argc, char *argv[])
             offsetX = offsetY = 0.f;
         }
 
+        GJKDebugInfo debugInfo;
+        debugInfo.numIterations = 10000;
+        debugInfo.hullResolution = 16;
+        int debugI = 0;
+        int debugJ = 1;
+
         for(int i=0; i< shapes.size(); ++i)
         {
             bool bOverlap = false;
@@ -85,15 +121,56 @@ int main(int argc, char *argv[])
             {
                 if(j == i){ continue; } //skip self
 
-                if(gjkOverlapping(ShapeUnion(shapes[i]), tms[i], ShapeUnion(shapes[j]), tms[j]))
+                const bool useDebug = debugEnabled && debugI == i && debugJ == j;
+                if(gjkOverlappingImp<true>(ShapeUnion(shapes[i]), tms[i], ShapeUnion(shapes[j]), tms[j], useDebug ? &debugInfo : nullptr))
                 {
                     bOverlap = true;
                     break;
                 }
             }
-            renderShape(shapes[i].asShape(), tms[i], renderer, bOverlap ? &green : nullptr);
+            if(renderShapes)
+            {
+                renderShape(shapes[i].asShape(), tms[i], renderer, bOverlap ? &green : nullptr);
+            }
         }
+        
+        if(debugEnabled)
+        {
+            for(int i=0; i<debugInfo.hullVerts.size()-1; ++i)
+            {
+                renderer.drawLine(debugInfo.hullVerts[i], debugInfo.hullVerts[i+1]);
+            }
+            renderer.drawLine(debugInfo.hullVerts[debugInfo.hullVerts.size()-1], debugInfo.hullVerts[0]);
+
+            int numFramesToDraw = min((int)debugInfo.perFrameInfo.size()-1, debugUpToFrame);
+            //for(size_t frame=0; frame< numFramesToDraw; ++frame)
+            int frame = numFramesToDraw;
+            {
+                const GJKDebugPerFrameInfo& info = debugInfo.perFrameInfo[frame];
+
+                renderer.drawCross(Transform::identity(), 3.f);
+
+                renderer.drawPoint(info.closestPt, &Red);
+
+                switch(info.dimension)
+                {
+                    case 0: renderer.drawPoint(info.simplex[0], &green); break;
+                    case 1: renderer.drawLine(info.simplex[0], info.simplex[1], &green); break;
+                    case 2: renderer.drawTriangle(info.simplex[0], info.simplex[1], info.simplex[2], &green); break;
+                    case 3:
+                    {
+                        renderer.drawTriangle(info.simplex[0], info.simplex[1], info.simplex[2], &green);
+                        renderer.drawTriangle(info.simplex[0], info.simplex[1], info.simplex[3], &green);
+                        renderer.drawTriangle(info.simplex[0], info.simplex[2], info.simplex[3], &green);
+                        renderer.drawTriangle(info.simplex[1], info.simplex[2], info.simplex[3], &green);
+                    }
+                    default: break;
+                }
                 
+            }
+        }
+
+
         renderer.flush();
 
         SDL_GL_SwapWindow(displayWindow);
