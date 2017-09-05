@@ -46,6 +46,8 @@ int main(int argc, char *argv[])
     bool debugEnabled = false;
     int debugUpToFrame = 0;
     bool renderShapes = true;
+    float zoom = 0.f;
+    int debugTarget = 2;
 
     while (!quit)
     {
@@ -75,11 +77,21 @@ int main(int argc, char *argv[])
                 }
             }
 
+            if(event.type == SDL_MOUSEWHEEL)
+            {
+                zoom -= event.wheel.y;
+            }
+
             if(event.type == SDL_KEYDOWN)
             {
                 if(event.key.keysym.sym == SDLK_d)
                 {
                     debugEnabled = !debugEnabled;
+                }
+
+                if (event.key.keysym.sym == SDLK_f)
+                {
+                    debugTarget += 1;
                 }
                 
                 if (event.key.keysym.sym == SDLK_r)
@@ -100,6 +112,7 @@ int main(int argc, char *argv[])
             }
         }
 
+        renderer.setCameraPosition(Vector3(0.f, 0.f, 150.f + zoom));
         renderer.clear();
 
         if(tms.size() > 0)
@@ -111,8 +124,8 @@ int main(int argc, char *argv[])
         GJKDebugInfo debugInfo;
         debugInfo.numIterations = 10000;
         debugInfo.hullResolution = 16;
-        int debugI = 0;
-        int debugJ = 1;
+        int debugI = debugTarget % 2;
+        int debugJ = 1 - debugI;
 
         for(int i=0; i< shapes.size(); ++i)
         {

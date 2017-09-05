@@ -136,6 +136,17 @@ Vector3 getClosestPointOnTetrahedron(const Vector3& a, const Vector3& b, const V
         }
     }
 
+    if (pointsOnOpposingFaceSides(a, d, c, b, p))
+    {
+        const Vector3 closestADC = getClosestPointOnTriangle(a, d, c, p);
+        const float dist2 = (closestADC - p).length2();
+        if (dist2 < shortestDist2)
+        {
+            shortestDist2 = dist2;
+            closestPt = closestADC;
+        }
+    }
+
     return closestPt;
 }
 
@@ -348,7 +359,7 @@ bool gjkOverlappingImp(const ShapeUnion& a, const Transform& a2World, const Shap
        Vector3 newVertex = supportAMinusB(a, b, bLocal2A, searchDir);
        const float progress = (newVertex - closestPt).dotProduct(searchDir);
        const float distFromOrigin = newVertex.length();
-       if(progress > OC_BIG_EPSILON)   //need epsilon for rounded edges where we can make very tiny progress
+       if(progress > 1.f)   //need epsilon for rounded edges where we can make very tiny progress
        {
            if(true || prevDist > distFromOrigin + 0.1f)
            {
