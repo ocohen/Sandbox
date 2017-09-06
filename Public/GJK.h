@@ -158,18 +158,39 @@ Vector3 support(const Sphere& sphere, const Transform& sphereTM, const Vector3& 
 Vector3 support(const Box& box, const Transform& boxTM, const Vector3& dir)
 {
     float bestAlong = -FLT_MAX;
-    const Vector3 orientedExtents = boxTM.transformVector(box.halfExtents);
-    //TODO: move dir into local space instead of checking for same direction
-    Vector3 choose = orientedExtents;
-    for(int i=0; i<3; ++i)
+    const Vector3 localDir = boxTM.rotation.getInverse() * dir;
+    auto computeDelta = [&](float dx, float bx) { return boxTM.transformPoint(localDir * (1.f + (dx - bx))); };
+
+    if(fabs(localDir.x) > fabs(localDir.y))
     {
-        if (dir[i] * orientedExtents[i] < 0)
+        if(fabs(localDir.x) > localDir.z)
         {
-            choose[i] *= -1;
+            return computeDelta(localDir.x, box.halfExtents.x);
+        }
+        else
+        {
+            return computeDelta(localDir.z, box.halfExtents.z);
         }
     }
+    else
+    {
+        if(fabs(localDir.y) > fabs(localDir.z))
+        {
+            return computeDelta(localDir.y, box.halfExtents.y);
+        }
+        else
+        {
+            return computeDelta(localDir.z, box.halfExtents.z);
+        }
+    }
+    /*Vector3 choose = box.halfExtents;
+    for(int i=0; i<3; ++i)
+    {
+        choose[i] = dir[i] > 0 ? choose[i] : -choose[i];
+    }
     
-    return choose + boxTM.translation;
+    return boxTM.transformPoint(choose);*/
+    return Vector3(0.f);
 }
 
 Vector3 support(const ShapeUnion& shape, const Transform& shapeTM, const Vector3& dir)
