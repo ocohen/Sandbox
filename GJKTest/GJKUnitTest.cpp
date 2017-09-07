@@ -39,11 +39,7 @@ TEST_CASE("GeometryTests", "[physics]")
    REQUIRE(Vector3::isNearlyEqual(support(sphere, Transform(Vector3(1.f, 2.f, 3.f)), Vector3(-1.f, -1.f, 0.f)), Vector3(1.f - 10.f*sqrt(2.f)/2.f, 2.f - 10.f*sqrt(2.f)/2.f, 3.f)));
 
    Box box(Vector3(1.f, 2.f, 3.f), Transform::identity());
-   REQUIRE(Vector3::isNearlyEqual(support(box,Transform(Vector3(10.f, 20.f, 30.f), Quaternion::fromAxisAndAngle(Vector3(0.f, 0.f, 1.f), PI_OVER_TWO)), Vector3(1.f, 0.f, 0.f)), Vector3(12.f, 21.f, 33.f)));
-
-   Box box2(Vector3(1.f, 2.f, 3.f), Transform::identity());
-   REQUIRE(Vector3::isNearlyEqual(support(box2,Transform(Vector3(10.f, 20.f, 30.f), Quaternion::fromAxisAndAngle(Vector3(0.f, 0.f, 1.f), PI_OVER_TWO*0.5f)), Vector3(1.f, 0.f, 0.f)), Vector3(10.f + sqrt(2.f)/2.f, 22.1213207f, 33.f)));
-
+   REQUIRE(Vector3::isNearlyEqual(support(box,Transform(Vector3(10.f, 20.f, 30.f), Quaternion::fromAxisAndAngle(Vector3(0.f, 0.f, 1.f), PI_OVER_TWO)), Vector3(1.f, 0.f, 0.f)), Vector3(12.f, 21.f, 27.f)));
    {
        Sphere s1(10.f, Transform::identity());
        Sphere s2(5.f,  Transform::identity());
@@ -54,5 +50,8 @@ TEST_CASE("GeometryTests", "[physics]")
        Box b1(Vector3(10.f, 20.f, 1.f), Transform::identity());
        REQUIRE(gjkOverlapping(s1,Transform(Vector3(9.9f, 0.f, 0.f)), b1, Transform(Vector3(-10.f, 0.f, 0.f))));
        REQUIRE(!gjkOverlapping(s1,Transform(Vector3(10.1f, 0.f, 0.f)), b1, Transform(Vector3(-10.f, 0.f, 0.f))));
+
+       REQUIRE(gjkOverlapping(s1, Transform(Vector3(51.f, -8.f, 0.f)), b1, Transform(Vector3(21.f, 3.f, 0.f), Quaternion::fromAxisAndAngle(Vector3(0.f, 0.f, 1.f), PI_OVER_TWO*0.5f) )));
+       REQUIRE(gjkOverlapping(b1, Transform(Vector3(21.f, 3.f, 0.f), Quaternion::fromAxisAndAngle(Vector3(0.f, 0.f, 1.f), PI_OVER_TWO*0.5f)), s1, Transform(Vector3(51.f, -8.f, 0.f)) ));
    }
 }

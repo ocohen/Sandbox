@@ -3,7 +3,6 @@
 
 #include "Vector3.h"
 #include "Shape.h"
-#include "Renderer.h"
 
 Vector3 getClosestPointOnLineSegment(const Vector3& lineStart, const Vector3& lineEnd, const Vector3& pt)
 {
@@ -159,38 +158,14 @@ Vector3 support(const Box& box, const Transform& boxTM, const Vector3& dir)
 {
     float bestAlong = -FLT_MAX;
     const Vector3 localDir = boxTM.rotation.getInverse() * dir;
-    auto computeDelta = [&](float dx, float bx) { return boxTM.transformPoint(localDir * (1.f + (dx - bx))); };
-
-    if(fabs(localDir.x) > fabs(localDir.y))
-    {
-        if(fabs(localDir.x) > localDir.z)
-        {
-            return computeDelta(localDir.x, box.halfExtents.x);
-        }
-        else
-        {
-            return computeDelta(localDir.z, box.halfExtents.z);
-        }
-    }
-    else
-    {
-        if(fabs(localDir.y) > fabs(localDir.z))
-        {
-            return computeDelta(localDir.y, box.halfExtents.y);
-        }
-        else
-        {
-            return computeDelta(localDir.z, box.halfExtents.z);
-        }
-    }
-    /*Vector3 choose = box.halfExtents;
+    
+    Vector3 choose = box.halfExtents;
     for(int i=0; i<3; ++i)
     {
-        choose[i] = dir[i] > 0 ? choose[i] : -choose[i];
+        choose[i] = localDir[i] > 0 ? choose[i] : -choose[i];
     }
     
-    return boxTM.transformPoint(choose);*/
-    return Vector3(0.f);
+    return boxTM.transformPoint(choose);
 }
 
 Vector3 support(const ShapeUnion& shape, const Transform& shapeTM, const Vector3& dir)
@@ -380,7 +355,7 @@ bool gjkOverlappingImp(const ShapeUnion& a, const Transform& a2World, const Shap
        Vector3 newVertex = supportAMinusB(a, b, bLocal2A, searchDir);
        const float progress = (newVertex - closestPt).dotProduct(searchDir);
        const float distFromOrigin = newVertex.length();
-       if(progress > 1.f)   //need epsilon for rounded edges where we can make very tiny progress
+       if(progress > 0.1f)   //need epsilon for rounded edges where we can make very tiny progress
        {
            if(true || prevDist > distFromOrigin + 0.1f)
            {

@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
     shapes.push_back(box);
 
     Transform sphereTM = Transform::identity();
-    Transform boxTM(Vector3(21.f, 0.f, 0.f), Quaternion::fromAxisAndAngle(Vector3(0.f, 0.f, 1.f), PI_OVER_TWO * 0.5f));
+    Transform boxTM(Vector3(21.f, 3.f, 0.f), Quaternion::fromAxisAndAngle(Vector3(0.f, 0.f, 1.f), PI_OVER_TWO * 0.5f));
 
     std::vector<Transform> tms;
     tms.push_back(sphereTM);
@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
         int debugJ = 1 - debugI;
 
         static float r = 0.f;
-        r += 0.01f;
+        r += 0.001f;
 
         tms[1] = Transform(Vector3(0.f), Quaternion::fromAxisAndAngle(Vector3(0.f, 0.f, 1.f), r));
 
