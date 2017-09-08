@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
                 if(j == i){ continue; } //skip self
 
                 const bool useDebug = debugEnabled && debugI == i && debugJ == j;
-                if(gjkOverlappingImp<true>(ShapeUnion(shapes[i]), tms[i], ShapeUnion(shapes[j]), tms[j], useDebug ? &debugInfo : nullptr))
+                if(gjkOverlappingImp<true>(ShapeUnion(shapes[i]), tms[i], ShapeUnion(shapes[j]), tms[j], useDebug ? &debugInfo : nullptr, fabs(sinf(r*100.f)*2.f)))
                 {
                     bOverlap = true;
                     break;

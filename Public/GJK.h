@@ -149,17 +149,17 @@ Vector3 getClosestPointOnTetrahedron(const Vector3& a, const Vector3& b, const V
     return closestPt;
 }
 
-Vector3 support(const Sphere& sphere, const Transform& sphereTM, const Vector3& dir)
+Vector3 support(const Sphere& sphere, const Transform& sphereTM, const Vector3& dir, float margin = 0.f)
 {
-    return sphereTM.translation + sphere.radius * dir.getNormal();
+    return sphereTM.translation + (sphere.radius + margin) * dir.getNormal();
 }
 
-Vector3 support(const Box& box, const Transform& boxTM, const Vector3& dir)
+Vector3 support(const Box& box, const Transform& boxTM, const Vector3& dir, float margin = 0.f)
 {
     float bestAlong = -FLT_MAX;
     const Vector3 localDir = boxTM.rotation.getInverse() * dir;
     
-    Vector3 choose = box.halfExtents;
+    Vector3 choose = box.halfExtents + Vector3(margin);
     for(int i=0; i<3; ++i)
     {
         choose[i] = localDir[i] > 0 ? choose[i] : -choose[i];
@@ -168,19 +168,19 @@ Vector3 support(const Box& box, const Transform& boxTM, const Vector3& dir)
     return boxTM.transformPoint(choose);
 }
 
-Vector3 support(const ShapeUnion& shape, const Transform& shapeTM, const Vector3& dir)
+Vector3 support(const ShapeUnion& shape, const Transform& shapeTM, const Vector3& dir, float margin = 0.f)
 {
     switch(shape.asShape().type)
     {
-    case EShapeType::Box: return support(shape.asBox(),shapeTM, dir);
-    case EShapeType::Sphere: return support(shape.asSphere(),shapeTM, dir);
+    case EShapeType::Box: return support(shape.asBox(),shapeTM, dir, margin);
+    case EShapeType::Sphere: return support(shape.asSphere(),shapeTM, dir, margin);
     default: return Vector3(0.f);
     }
 }
 
-Vector3 supportAMinusB(const ShapeUnion& a, const ShapeUnion& b, const Transform& bLocalToATM, const Vector3& dir)
+Vector3 supportAMinusB(const ShapeUnion& a, const ShapeUnion& b, const Transform& bLocalToATM, const Vector3& dir, float margin = 0.f)
 {
-    return support(a, Transform::identity(), dir) - support(b,bLocalToATM, -dir);
+    return support(a, Transform::identity(), dir, margin) - support(b,bLocalToATM, -dir, margin);
 }
 
 Vector3 getClosestToOriginInSimplex(const Vector3* simplex, int dimension)
@@ -296,7 +296,7 @@ struct GJKDebugInfo
 };
 
 template <bool debug>
-bool gjkOverlappingImp(const ShapeUnion& a, const Transform& a2World, const ShapeUnion& b, const Transform& b2World, GJKDebugInfo* debugInfo)
+bool gjkOverlappingImp(const ShapeUnion& a, const Transform& a2World, const ShapeUnion& b, const Transform& b2World, GJKDebugInfo* debugInfo, float margin)
 {
     const Transform bLocal2A = a2World.inverseTransform(b2World);
 
@@ -307,12 +307,12 @@ bool gjkOverlappingImp(const ShapeUnion& a, const Transform& a2World, const Shap
         {
             const float theta = i * 2*PI / debugInfo->hullResolution;
             Vector3 dir(cosf(theta), sinf(theta), 0.f);
-            debugInfo->hullVerts.push_back(supportAMinusB(a, b, bLocal2A, dir));
+            debugInfo->hullVerts.push_back(supportAMinusB(a, b, bLocal2A, dir, margin));
         }
     }
 
     Vector3 simplex[4];
-    simplex[0] = supportAMinusB(a, b, bLocal2A, Vector3(1.f, 0.f, 0.f));
+    simplex[0] = supportAMinusB(a, b, bLocal2A, Vector3(1.f, 0.f, 0.f), margin);
     int dimension = 0;
     float prevDist = FLT_MAX;
 
@@ -352,7 +352,7 @@ bool gjkOverlappingImp(const ShapeUnion& a, const Transform& a2World, const Shap
        }
 
        const Vector3 searchDir = -closestPt.getNormal();
-       Vector3 newVertex = supportAMinusB(a, b, bLocal2A, searchDir);
+       Vector3 newVertex = supportAMinusB(a, b, bLocal2A, searchDir, margin);
        const float progress = (newVertex - closestPt).dotProduct(searchDir);
        const float distFromOrigin = newVertex.length();
        if(progress > 0.1f)   //need epsilon for rounded edges where we can make very tiny progress
@@ -405,9 +405,9 @@ bool gjkOverlappingImp(const ShapeUnion& a, const Transform& a2World, const Shap
     }
 }
 
-bool gjkOverlapping(const ShapeUnion& a, const Transform& a2World, const ShapeUnion& b, const Transform& b2World)
+bool gjkOverlapping(const ShapeUnion& a, const Transform& a2World, const ShapeUnion& b, const Transform& b2World, float margin=0.f)
 {
-    return gjkOverlappingImp<false>(a, a2World, b, b2World, nullptr);
+    return gjkOverlappingImp<false>(a, a2World, b, b2World, nullptr, margin);
 }
 
 #endif
