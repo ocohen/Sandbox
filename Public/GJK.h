@@ -296,7 +296,7 @@ struct GJKDebugInfo
 };
 
 template <bool debug>
-bool gjkOverlappingImp(const ShapeUnion& a, const Transform& a2World, const ShapeUnion& b, const Transform& b2World, GJKDebugInfo* debugInfo, float margin)
+bool gjkGetClosestPoints(const ShapeUnion& a, const Transform& a2World, const ShapeUnion& b, const Transform& b2World, GJKDebugInfo* debugInfo, float margin, Vector3& closestA, Vector3& closestB)
 {
     const Transform bLocal2A = a2World.inverseTransform(b2World);
 
@@ -326,7 +326,7 @@ bool gjkOverlappingImp(const ShapeUnion& a, const Transform& a2World, const Shap
     {
        if(debug && debugInfo && debugInfo->numIterations <= iterationCount)
        {
-           return false;
+           return true;
        }
        ++iterationCount;
 
@@ -344,7 +344,7 @@ bool gjkOverlappingImp(const ShapeUnion& a, const Transform& a2World, const Shap
            {
                debugInfo->perFrameInfo.back().result = GJKDebugPerFrameInfo::Overlap;
            }
-           return true;
+           return false;
        }
        else
        {
@@ -372,7 +372,7 @@ bool gjkOverlappingImp(const ShapeUnion& a, const Transform& a2World, const Shap
                            {
                                debugInfo->perFrameInfo.back().result = GJKDebugPerFrameInfo::NoOverlap;
                            }
-                           return false;
+                           return true;
                        }
                    }
 
@@ -391,7 +391,7 @@ bool gjkOverlappingImp(const ShapeUnion& a, const Transform& a2World, const Shap
                {
                    debugInfo->perFrameInfo.back().result = GJKDebugPerFrameInfo::NoOverlap;
                }
-                return false;
+                return true;
            }
        }
        else
@@ -400,14 +400,15 @@ bool gjkOverlappingImp(const ShapeUnion& a, const Transform& a2World, const Shap
            {
                debugInfo->perFrameInfo.back().result = GJKDebugPerFrameInfo::NoOverlap;
            }
-           return false;
+           return true;
        }
     }
 }
 
 bool gjkOverlapping(const ShapeUnion& a, const Transform& a2World, const ShapeUnion& b, const Transform& b2World, float margin=0.f)
 {
-    return gjkOverlappingImp<false>(a, a2World, b, b2World, nullptr, margin);
+    Vector3 closestA, closestB;
+    return !gjkGetClosestPoints<false>(a, a2World, b, b2World, nullptr, margin, closestA, closestB);
 }
 
 #endif
