@@ -4,24 +4,56 @@
 #include "Vector3.h"
 #include "Shape.h"
 
-Vector3 getClosestPointOnLineSegment(const Vector3& lineStart, const Vector3& lineEnd, const Vector3& pt)
+Vector3 getClosestPointOnLineSegment(const Vector3& lineStart, const Vector3& lineEnd, const Vector3& pt, float* uvw = nullptr)
 {
     //assume line from a to b and pt is c projected onto it. Clamp t from 0-1
     Vector3 ab = lineEnd - lineStart;
     const float abLength2 = ab.length2();
     if(isNearlyEqual(abLength2, 0.f))
     {
+        if(uvw)
+        {
+            uvw[0] = 1.f;
+            uvw[1] = 0.f;
+        }
+
         return lineStart;
     }
 
     Vector3 ac = pt - lineStart;
     float t = Vector3::dotProduct(ac, ab) / abLength2;
-    if(t <= 0.f) return lineStart;
-    if(t >= 1.f) return lineEnd;
+    if(t <= 0.f)
+    {
+        if (uvw)
+        {
+            uvw[0] = 1.f;
+            uvw[1] = 0.f;
+        }
+
+        return lineStart;
+    }
+
+    if(t >= 1.f)
+    {
+        if (uvw)
+        {
+            uvw[0] = 0.f;
+            uvw[1] = 1.f;
+        }
+
+        return lineEnd;
+    }
+
+    if (uvw)
+    {
+        uvw[0] = 1.f - t;
+        uvw[1] = t;
+    }
+
     return lineStart + t * ab;
 }
 
-Vector3 getClosestPointOnTriangle(const Vector3& a, const Vector3& b, const Vector3& c, const Vector3& p)
+Vector3 getClosestPointOnTriangle(const Vector3& a, const Vector3& b, const Vector3& c, const Vector3& p, float* uvw = nullptr)
 {
     //See orange collision detection book
     //compute barycentric coordinates of the projection of p onto the triangle abc
@@ -43,6 +75,12 @@ Vector3 getClosestPointOnTriangle(const Vector3& a, const Vector3& b, const Vect
 
     if(sNom <= 0.f && tNom <= 0.f)
     {
+        if(uvw)
+        {
+            uvw[0] = 1.f;
+            uvw[1] = 0.f;
+            uvw[2] = 0.f;
+        }
         return a;
     }
 
@@ -52,11 +90,23 @@ Vector3 getClosestPointOnTriangle(const Vector3& a, const Vector3& b, const Vect
 
     if(sDenom <= 0.f && uNom <= 0.f)
     {
+        if (uvw)
+        {
+            uvw[0] = 0.f;
+            uvw[1] = 1.f;
+            uvw[2] = 0.f;
+        }
         return b;
     }
 
     if(tDenom <= 0.f && uDenom <= 0.f)
     {
+        if (uvw)
+        {
+            uvw[0] = 0.f;
+            uvw[1] = 0.f;
+            uvw[2] = 1.f;
+        }
         return c;
     }
 
@@ -65,25 +115,58 @@ Vector3 getClosestPointOnTriangle(const Vector3& a, const Vector3& b, const Vect
 
     if(vC <= 0.f && sNom >= 0.f && sDenom >= 0.f)
     {
-        return a + sNom / (sNom + sDenom) * ab;
+        const float gamma = sNom / (sNom + sDenom);
+        if(uvw)
+        {
+            //\alpha*a + \beta*b = p = a + \gamma * (b-a) => \alpha = 1 - \gamma, \beta = \gamma
+            uvw[0] = 1.f - gamma;
+            uvw[1] = gamma;
+            uvw[2] = 0.f;
+        }
+
+        return a +  gamma * ab;
     }
 
     const float vA = Vector3::dotProduct(n, Vector3::crossProduct(b - p, c - p));
     if (vA <= 0.f && uNom >= 0.f && uDenom >= 0.f)
     {
-        return b + uNom / (uNom + uDenom) * bc;
+        const float gamma = uNom / (uNom + uDenom);
+        if (uvw)
+        {
+            uvw[0] = 0.f;
+            uvw[1] = 1.f - gamma;
+            uvw[2] = gamma;
+        }
+
+        return b + gamma * bc;
     }
 
     const float vB = Vector3::dotProduct(n, Vector3::crossProduct(c - p, a - p));
     if (vB <= 0.f && tNom >= 0.f && tDenom >= 0.f)
     {
-        return a + tNom / (tNom + tDenom) * ac;
+        const float gamma = tNom / (tNom + tDenom);
+        if (uvw)
+        {
+            uvw[0] = 1.f - gamma;
+            uvw[1] = 0.f;
+            uvw[2] = gamma;
+        }
+
+        return a + gamma * ac;
     }
 
     //P projects inside the triangle face
     const float u = vA / (vA + vB + vC);
     const float v = vB / (vA + vB + vC);
     const float w = 1.f - u - v;
+
+    if(uvw)
+    {
+        uvw[0] = u;
+        uvw[1] = v;
+        uvw[2] = w;
+    }
+
     return u*a + v*b + w*c;
 }
 
@@ -178,28 +261,33 @@ Vector3 support(const ShapeUnion& shape, const Transform& shapeTM, const Vector3
     }
 }
 
-Vector3 supportAMinusB(const ShapeUnion& a, const ShapeUnion& b, const Transform& bLocalToATM, const Vector3& dir, float margin = 0.f)
+Vector3 supportAMinusB(const ShapeUnion& a, const ShapeUnion& b, const Transform& bLocalToATM, const Vector3& dir, float margin = 0.f, Vector3* aSimplex = nullptr, Vector3* bSimplex = nullptr)
 {
-    return support(a, Transform::identity(), dir, margin) - support(b,bLocalToATM, -dir, margin);
+    const Vector3 aSupport = support(a, Transform::identity(), dir, margin);
+    const Vector3 bSupport = -support(b,bLocalToATM, -dir, margin);
+    if(bSimplex){ *aSimplex = aSupport; *bSimplex = bSupport; }
+    return  aSupport + bSupport;
 }
 
-Vector3 getClosestToOriginInSimplex(const Vector3* simplex, int dimension)
+Vector3 getClosestToOriginInSimplex(const Vector3* simplex, int dimension, float* uvw = nullptr)
 {
     switch (dimension)
     {
     case 0:
     {
+        if(uvw){ *uvw = 1.f; }
         return simplex[0];
     }
     case 1:
     {
-        return getClosestPointOnLineSegment(simplex[0], simplex[1], Vector3(0.f));
+        return getClosestPointOnLineSegment(simplex[0], simplex[1], Vector3(0.f), uvw);
     }
     case 2:
     {
-        return getClosestPointOnTriangle(simplex[0], simplex[1], simplex[2], Vector3(0.f));
+        return getClosestPointOnTriangle(simplex[0], simplex[1], simplex[2], Vector3(0.f), uvw);
     }
     case 3:
+        if(uvw){ assert(false && "Trying to get uvw for tetrahedron is not supported"); }
         return getClosestPointOnTetrahedron(simplex[0], simplex[1], simplex[2], simplex[3], Vector3(0.f));
     default:
         assert(false && "Simplex of dimension 4 or bigger");
@@ -207,7 +295,8 @@ Vector3 getClosestToOriginInSimplex(const Vector3* simplex, int dimension)
     }
 }
 
-void reduceSimplex(Vector3* simplex, int& dimension, const Vector3& closestPt)
+template <bool swapOriginalPts = false>
+void reduceSimplex(Vector3* simplex, int& dimension, const Vector3& closestPt, Vector3* simplexAPts = nullptr, Vector3* simplexBPts = nullptr)
 {
     switch(dimension)
     {
@@ -219,11 +308,21 @@ void reduceSimplex(Vector3* simplex, int& dimension, const Vector3& closestPt)
         if(Vector3::isNearlyEqual(closestPt, getClosestPointOnLineSegment(simplex[1], simplex[2], closestPt)))
         {
             simplex[0] = simplex[2];
+            if(swapOriginalPts)
+            {
+                simplexAPts[0] = simplexAPts[2];
+                simplexBPts[0] = simplexBPts[2];
+            }
             dimension = 1;
         }
         else if(Vector3::isNearlyEqual(closestPt, getClosestPointOnLineSegment(simplex[0], simplex[2], closestPt)))
         {
             simplex[1] = simplex[2];
+            if (swapOriginalPts)
+            {
+                simplexAPts[1] = simplexAPts[2];
+                simplexBPts[1] = simplexBPts[2];
+            }
             dimension = 1;
         }
         else if(Vector3::isNearlyEqual(closestPt, getClosestPointOnLineSegment(simplex[0], simplex[1], closestPt)))
@@ -238,16 +337,31 @@ void reduceSimplex(Vector3* simplex, int& dimension, const Vector3& closestPt)
         if(Vector3::isNearlyEqual(closestPt, getClosestPointOnTriangle(simplex[1], simplex[2], simplex[3], closestPt)))
         {
             simplex[0] = simplex[3];
+            if (swapOriginalPts)
+            {
+                simplexAPts[0] = simplexAPts[3];
+                simplexBPts[0] = simplexBPts[3];
+            }
             dimension = 2;
         }
         else if(Vector3::isNearlyEqual(closestPt, getClosestPointOnTriangle(simplex[0], simplex[2], simplex[3], closestPt)))
         {
             simplex[1] = simplex[3];
+            if (swapOriginalPts)
+            {
+                simplexAPts[1] = simplexAPts[3];
+                simplexBPts[1] = simplexBPts[3];
+            }
             dimension = 2;
         }
         else if (Vector3::isNearlyEqual(closestPt, getClosestPointOnTriangle(simplex[0], simplex[1], simplex[3], closestPt)))
         {
             simplex[2] = simplex[3];
+            if (swapOriginalPts)
+            {
+                simplexAPts[2] = simplexAPts[3];
+                simplexBPts[2] = simplexBPts[3];
+            }
             dimension = 2;
         }
         else if (Vector3::isNearlyEqual(closestPt, getClosestPointOnTriangle(simplex[0], simplex[1], simplex[2], closestPt)))
@@ -295,6 +409,25 @@ struct GJKDebugInfo
     std::vector<Vector3> hullVerts;
 };
 
+void getClosestPointsForSimplex(Vector3* simplex, int dimension, const Vector3& closestPt, Vector3* simplexAPts, Vector3* simplexBPts, Vector3& closestA, Vector3& closestB, const Transform& a2World)
+{
+    reduceSimplex<true>(simplex, dimension, closestPt, simplexAPts, simplexBPts);
+    float uvw[3] = {0.f, 0.f, 0.f};
+
+    getClosestToOriginInSimplex(simplex, dimension, uvw);
+    closestA = Vector3(0.f);
+    closestB = Vector3(0.f);
+
+    for(int i=0; i <= dimension; ++i)
+    {
+        closestA += uvw[i] * simplexAPts[i];
+        closestB += uvw[i] * simplexBPts[i];
+    }
+
+    closestA = a2World.transformPoint(closestA);
+    closestB = a2World.transformPoint(closestB);
+}
+
 template <bool debug>
 bool gjkGetClosestPoints(const ShapeUnion& a, const Transform& a2World, const ShapeUnion& b, const Transform& b2World, GJKDebugInfo* debugInfo, float margin, Vector3& closestA, Vector3& closestB)
 {
@@ -312,7 +445,10 @@ bool gjkGetClosestPoints(const ShapeUnion& a, const Transform& a2World, const Sh
     }
 
     Vector3 simplex[4];
-    simplex[0] = supportAMinusB(a, b, bLocal2A, Vector3(1.f, 0.f, 0.f), margin);
+    Vector3 simplexAPts[4];
+    Vector3 simplexBPts[4];
+
+    simplex[0] = supportAMinusB(a, b, bLocal2A, Vector3(1.f, 0.f, 0.f), margin, &simplexAPts[0], &simplexBPts[0]);
     int dimension = 0;
     float prevDist = FLT_MAX;
 
@@ -352,7 +488,7 @@ bool gjkGetClosestPoints(const ShapeUnion& a, const Transform& a2World, const Sh
        }
 
        const Vector3 searchDir = -closestPt.getNormal();
-       Vector3 newVertex = supportAMinusB(a, b, bLocal2A, searchDir, margin);
+       Vector3 newVertex = supportAMinusB(a, b, bLocal2A, searchDir, margin, &simplexAPts[dimension+1], &simplexBPts[dimension+1]);
        const float progress = (newVertex - closestPt).dotProduct(searchDir);
        const float distFromOrigin = newVertex.length();
        if(progress > 0.1f)   //need epsilon for rounded edges where we can make very tiny progress
@@ -372,6 +508,7 @@ bool gjkGetClosestPoints(const ShapeUnion& a, const Transform& a2World, const Sh
                            {
                                debugInfo->perFrameInfo.back().result = GJKDebugPerFrameInfo::NoOverlap;
                            }
+                           getClosestPointsForSimplex(simplex, dimension, closestPt, simplexAPts, simplexBPts, closestA, closestB, a2World);
                            return true;
                        }
                    }
@@ -391,6 +528,7 @@ bool gjkGetClosestPoints(const ShapeUnion& a, const Transform& a2World, const Sh
                {
                    debugInfo->perFrameInfo.back().result = GJKDebugPerFrameInfo::NoOverlap;
                }
+               getClosestPointsForSimplex(simplex, dimension, closestPt, simplexAPts, simplexBPts, closestA, closestB, a2World);
                 return true;
            }
        }
@@ -400,6 +538,7 @@ bool gjkGetClosestPoints(const ShapeUnion& a, const Transform& a2World, const Sh
            {
                debugInfo->perFrameInfo.back().result = GJKDebugPerFrameInfo::NoOverlap;
            }
+           getClosestPointsForSimplex(simplex, dimension, closestPt, simplexAPts, simplexBPts, closestA, closestB, a2World);
            return true;
        }
     }

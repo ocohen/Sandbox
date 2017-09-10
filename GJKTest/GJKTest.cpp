@@ -132,18 +132,20 @@ int main(int argc, char *argv[])
 
         tms[1] = Transform(Vector3(0.f), Quaternion::fromAxisAndAngle(Vector3(0.f, 0.f, 1.f), r));
 
+        Vector3 closestA(0.f);
+        Vector3 closestB(0.f);
+
         for(int i=0; i< shapes.size(); ++i)
         {
             bool bOverlap = false;
-            Vector3 closestA(0.f);
-            Vector3 closestB(0.f);
+            
 
             for(int j=0; j<shapes.size(); ++j)
             {
                 if(j == i){ continue; } //skip self
 
                 const bool useDebug = debugEnabled && debugI == i && debugJ == j;
-                if(!gjkGetClosestPoints<true>(ShapeUnion(shapes[i]), tms[i], ShapeUnion(shapes[j]), tms[j], useDebug ? &debugInfo : nullptr, 0.f, closestA, closestB))
+                if(useDebug && !gjkGetClosestPoints<true>(ShapeUnion(shapes[i]), tms[i], ShapeUnion(shapes[j]), tms[j], useDebug ? &debugInfo : nullptr, 0.f, closestA, closestB))
                 {
                     bOverlap = true;
                     break;
@@ -152,13 +154,11 @@ int main(int argc, char *argv[])
             if(renderShapes)
             {
                 renderShape(shapes[i].asShape(), tms[i], renderer, bOverlap ? &green : nullptr);
-                if(!bOverlap)
-                {
-                    renderer.drawPoint(closestA, &red, 3.f);
-                    renderer.drawPoint(closestB, &red, 3.f);
-                }
             }
         }
+
+        renderer.drawPoint(closestA, &red, 3.f);
+        renderer.drawPoint(closestB, &red, 3.f);
         
         if(debugEnabled)
         {
