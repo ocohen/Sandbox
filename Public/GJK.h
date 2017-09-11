@@ -264,9 +264,9 @@ Vector3 support(const ShapeUnion& shape, const Transform& shapeTM, const Vector3
 Vector3 supportAMinusB(const ShapeUnion& a, const ShapeUnion& b, const Transform& bLocalToATM, const Vector3& dir, float margin = 0.f, Vector3* aSimplex = nullptr, Vector3* bSimplex = nullptr)
 {
     const Vector3 aSupport = support(a, Transform::identity(), dir, margin);
-    const Vector3 bSupport = -support(b,bLocalToATM, -dir, margin);
+    const Vector3 bSupport = support(b,bLocalToATM, -dir, margin);
     if(bSimplex){ *aSimplex = aSupport; *bSimplex = bSupport; }
-    return  aSupport + bSupport;
+    return  aSupport - bSupport;
 }
 
 Vector3 getClosestToOriginInSimplex(const Vector3* simplex, int dimension, float* uvw = nullptr)
@@ -295,8 +295,7 @@ Vector3 getClosestToOriginInSimplex(const Vector3* simplex, int dimension, float
     }
 }
 
-template <bool swapOriginalPts = false>
-void reduceSimplex(Vector3* simplex, int& dimension, const Vector3& closestPt, Vector3* simplexAPts = nullptr, Vector3* simplexBPts = nullptr)
+void reduceSimplex(Vector3* simplex, int& dimension, const Vector3& closestPt, Vector3* simplexAPts, Vector3* simplexBPts)
 {
     switch(dimension)
     {
@@ -308,21 +307,15 @@ void reduceSimplex(Vector3* simplex, int& dimension, const Vector3& closestPt, V
         if(Vector3::isNearlyEqual(closestPt, getClosestPointOnLineSegment(simplex[1], simplex[2], closestPt)))
         {
             simplex[0] = simplex[2];
-            if(swapOriginalPts)
-            {
-                simplexAPts[0] = simplexAPts[2];
-                simplexBPts[0] = simplexBPts[2];
-            }
+            simplexAPts[0] = simplexAPts[2];
+            simplexBPts[0] = simplexBPts[2];
             dimension = 1;
         }
         else if(Vector3::isNearlyEqual(closestPt, getClosestPointOnLineSegment(simplex[0], simplex[2], closestPt)))
         {
             simplex[1] = simplex[2];
-            if (swapOriginalPts)
-            {
-                simplexAPts[1] = simplexAPts[2];
-                simplexBPts[1] = simplexBPts[2];
-            }
+            simplexAPts[1] = simplexAPts[2];
+            simplexBPts[1] = simplexBPts[2];
             dimension = 1;
         }
         else if(Vector3::isNearlyEqual(closestPt, getClosestPointOnLineSegment(simplex[0], simplex[1], closestPt)))
@@ -337,31 +330,22 @@ void reduceSimplex(Vector3* simplex, int& dimension, const Vector3& closestPt, V
         if(Vector3::isNearlyEqual(closestPt, getClosestPointOnTriangle(simplex[1], simplex[2], simplex[3], closestPt)))
         {
             simplex[0] = simplex[3];
-            if (swapOriginalPts)
-            {
-                simplexAPts[0] = simplexAPts[3];
-                simplexBPts[0] = simplexBPts[3];
-            }
+            simplexAPts[0] = simplexAPts[3];
+            simplexBPts[0] = simplexBPts[3];
             dimension = 2;
         }
         else if(Vector3::isNearlyEqual(closestPt, getClosestPointOnTriangle(simplex[0], simplex[2], simplex[3], closestPt)))
         {
             simplex[1] = simplex[3];
-            if (swapOriginalPts)
-            {
-                simplexAPts[1] = simplexAPts[3];
-                simplexBPts[1] = simplexBPts[3];
-            }
+            simplexAPts[1] = simplexAPts[3];
+            simplexBPts[1] = simplexBPts[3];
             dimension = 2;
         }
         else if (Vector3::isNearlyEqual(closestPt, getClosestPointOnTriangle(simplex[0], simplex[1], simplex[3], closestPt)))
         {
             simplex[2] = simplex[3];
-            if (swapOriginalPts)
-            {
-                simplexAPts[2] = simplexAPts[3];
-                simplexBPts[2] = simplexBPts[3];
-            }
+            simplexAPts[2] = simplexAPts[3];
+            simplexBPts[2] = simplexBPts[3];
             dimension = 2;
         }
         else if (Vector3::isNearlyEqual(closestPt, getClosestPointOnTriangle(simplex[0], simplex[1], simplex[2], closestPt)))
@@ -411,7 +395,7 @@ struct GJKDebugInfo
 
 void getClosestPointsForSimplex(Vector3* simplex, int dimension, const Vector3& closestPt, Vector3* simplexAPts, Vector3* simplexBPts, Vector3& closestA, Vector3& closestB, const Transform& a2World)
 {
-    reduceSimplex<true>(simplex, dimension, closestPt, simplexAPts, simplexBPts);
+    reduceSimplex(simplex, dimension, closestPt, simplexAPts, simplexBPts);
     float uvw[3] = {0.f, 0.f, 0.f};
 
     getClosestToOriginInSimplex(simplex, dimension, uvw);
@@ -484,7 +468,7 @@ bool gjkGetClosestPoints(const ShapeUnion& a, const Transform& a2World, const Sh
        }
        else
        {
-           reduceSimplex(simplex, dimension, closestPt);
+           reduceSimplex(simplex, dimension, closestPt, simplexAPts, simplexBPts);
        }
 
        const Vector3 searchDir = -closestPt.getNormal();
