@@ -145,15 +145,14 @@ int main(int argc, char *argv[])
             {
                 if(i == debugI && j == debugJ)
                 {
-                    if (!gjkGetClosestPoints<true>(ShapeUnion(shapes[i]), tms[i], ShapeUnion(shapes[j]), tms[j], debugEnabled ? &debugInfo : nullptr, 0.f, closestA, closestB))
+                    if (gjkOverlapping(ShapeUnion(shapes[i]), tms[i], ShapeUnion(shapes[j]), tms[j], 2.f))
                     {
                         bOverlap = true;
-                        break;
-                    }
-                    else
-                    {
-                        renderer.drawPoint(closestA, &red, 3.f);
-                        renderer.drawPoint(closestB, &red, 3.f);
+                        if(gjkGetClosestPoints<true>(ShapeUnion(shapes[i]), tms[i], ShapeUnion(shapes[j]), tms[j], debugEnabled ? &debugInfo : nullptr, 0.f, closestA, closestB))
+                        {
+                            renderer.drawPoint(closestA, &red, 3.f);
+                            renderer.drawPoint(closestB, &red, 3.f);
+                        }
                     }
                 }
             }
