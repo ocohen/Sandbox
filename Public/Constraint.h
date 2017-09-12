@@ -31,6 +31,10 @@ struct Constraint
     float invMass1;
     float invMass2;
 
+    float maxImpulse;
+    float minImpulse;
+    float accumulatedImpulse;
+
     Logger* logger;
     std::string loggerKey;
 
@@ -44,6 +48,9 @@ struct Constraint
         , invInertiaScale1(1.f)
         , invInertiaScale2(1.f)
         , linearProjection(FLT_MAX)
+        , maxImpulse(FLT_MAX)
+        , minImpulse(-FLT_MAX)
+        , accumulatedImpulse(0.f)
         , logger(nullptr)
     {
         const Transform body1TM = body1 ? body1->bodyToWorld : Transform::identity();
@@ -58,6 +65,7 @@ struct Constraint
     {
         invMass1 = body1 ? body1->invMass * invMassScale1 : 0.f;
         invMass2 = body2 ? body2->invMass * invMassScale2 : 0.f;
+        accumulatedImpulse = 0.f;
 
         if(invMass1 > OC_BIG_EPSILON || invMass2 > OC_BIG_EPSILON)
         {
@@ -82,7 +90,6 @@ struct Constraint
              r1 = p1TM.translation - body1TM.translation;
              r2 = p2TM.translation - body2TM.translation;
         }
-
     }
 
     void solveConstraint(float invDeltaTime)
@@ -111,7 +118,13 @@ struct Constraint
                 const float r2squaredMinusR2Dot = r2.length2()*weight2 - r2.dotProduct(normal*weight2)*r2.dotProduct(normal);
                 const float r1squaredMinusR1Dot = r1.length2()*weight1 - r1.dotProduct(normal*weight1)*r1.dotProduct(normal);
                 const float lambda = -relVelocity / (1.f + r2squaredMinusR2Dot + r1squaredMinusR1Dot);
-                const Vector3 correctionImpulse = (lambda + geometricError * invDeltaTime * 0.05f) * normal;
+                const float computedImpulse = (lambda + geometricError * invDeltaTime * 0.05f);
+                const float prevAccumulatedImpulse = accumulatedImpulse;
+                const float newTotalImpulse = clamp(prevAccumulatedImpulse + computedImpulse, minImpulse, maxImpulse);
+                const float finalComputedImpulse = newTotalImpulse - prevAccumulatedImpulse;
+                accumulatedImpulse = newTotalImpulse;
+
+                const Vector3 correctionImpulse = finalComputedImpulse * normal;
 
                 if (logger)
                 {
@@ -156,6 +169,7 @@ struct PerAxisConstraint : public Constraint
     {
         invMass1 = body1 ? body1->invMass * invMassScale1 : 0.f;
         invMass2 = body2 ? body2->invMass * invMassScale2 : 0.f;
+        accumulatedImpulse = 0.f;
 
         if (invMass1 > OC_BIG_EPSILON || invMass2 > OC_BIG_EPSILON)
         {
