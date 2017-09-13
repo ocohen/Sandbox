@@ -37,13 +37,14 @@ int main(int argc, char *argv[])
     compoundBody2.linearDamping = 0.5f;
 
     RigidBodyDesc rootBody;
-    const float chainOffset = 50.f;
+    rootBody.shapes.push_back(Sphere(5.f, Transform(Vector3(0.f), Quaternion(0.f, 0.f, 0.f, 1.f))));
 
+    const float chainOffset = 50.f;
+    
     for(int chainIdx = 0; chainIdx < 2; ++chainIdx)
     {
         const int numBodies = 10;
 
-        rootBody.shapes.push_back(Sphere(5.f, Transform(Vector3(0.f), Quaternion(0.f, 0.f, 0.f, 1.f))));
 
         int kinBodyIdx = physWorld.createRigidActor(Transform(Vector3(0.f + chainIdx * chainOffset, 40.f, 0.f), Quaternion(0.f, 0.f, 0.f, 1.f)), rootBody);
 
@@ -52,7 +53,7 @@ int main(int argc, char *argv[])
             physWorld.createRigidActor(Transform(Vector3(10.f * (i + 1) + chainIdx * chainOffset, 40.f, 0.f), Quaternion(0.f, 0.f, 0.f, 1.f)), bodyDescs[(i + 1) % 2]);
         }
 
-        physWorld.createConstraint(-1, Transform(Vector3(chainIdx * chainOffset, 40.f, 0.f) , Quaternion(0.f, 0.f, 0.f, 1.f)), + numBodies * chainIdx, Transform::identity());
+        int idx = physWorld.createConstraint(-1, Transform(Vector3(chainIdx * chainOffset, 40.f, 0.f) , Quaternion(0.f, 0.f, 0.f, 1.f)), + numBodies * chainIdx, Transform::identity());
 
         for (int i = 0; i < numBodies - 1; ++i)
         {
@@ -62,6 +63,7 @@ int main(int argc, char *argv[])
         physWorld.fixedConstraints = true;
 
     }
+
 
     
 
