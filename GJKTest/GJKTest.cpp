@@ -138,6 +138,7 @@ int main(int argc, char *argv[])
         {
             Vector3 closestA(0.f);
             Vector3 closestB(0.f);
+            Vector3 normal(0.f);
 
             bool bOverlap = false;
 
@@ -145,13 +146,15 @@ int main(int argc, char *argv[])
             {
                 if(i == debugI && j == debugJ)
                 {
-                    if (gjkOverlapping(ShapeUnion(shapes[i]), tms[i], ShapeUnion(shapes[j]), tms[j], 2.f))
+                    if (gjkOverlapping(ShapeUnion(shapes[i]), tms[i], ShapeUnion(shapes[j]), tms[j], 20.f))
                     {
                         bOverlap = true;
-                        if(gjkGetClosestPoints<true>(ShapeUnion(shapes[i]), tms[i], ShapeUnion(shapes[j]), tms[j], debugEnabled ? &debugInfo : nullptr, 0.f, closestA, closestB))
+                        if(gjkGetClosestPoints<true>(ShapeUnion(shapes[i]), tms[i], ShapeUnion(shapes[j]), tms[j], debugEnabled ? &debugInfo : nullptr, 0.f, closestA, closestB, normal))
                         {
                             renderer.drawPoint(closestA, &red, 3.f);
                             renderer.drawPoint(closestB, &red, 3.f);
+                            renderer.drawLine(closestA, closestA + normal * 10.f, &red, 3.f);
+                            renderer.drawSphere(closestA + normal * 10.f, 0.5f, 4, &red, 3.f);
                         }
                     }
                 }
