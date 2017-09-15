@@ -4,6 +4,7 @@
 #include "ShapeRenderer.h"
 #include <vector>
 #include "GJK.h"
+#include "PhysWorld.h"
 #include <algorithm>
  
 int main(int argc, char *argv[])
@@ -40,6 +41,19 @@ int main(int argc, char *argv[])
     tms.push_back(dynTM);
     tms.push_back(staticTM);
 
+    PhysWorld physWorld(Vector3(0.f, -10.f, 0.f));
+
+    RigidBodyDesc dynDesc;
+    RigidBodyDesc staticDesc;
+    dynDesc.shapes.push_back(sphere);
+    staticDesc.shapes.push_back(box);
+    staticDesc.invMass = 0.f;
+    staticDesc.invInertia = Vector3(0.f);
+
+    physWorld.createRigidActor(dynTM, dynDesc);
+    physWorld.createRigidActor(staticTM, staticDesc);
+
+
     Vector3 green(0.f, 1.f, 0.f);
     Vector3 red(1.f, 0.f, 0.f);
 
@@ -48,6 +62,7 @@ int main(int argc, char *argv[])
     bool renderShapes = true;
     float zoom = 0.f;
     int debugTarget = 2;
+    bool simulate = false;
 
     while (!quit)
     {
@@ -61,11 +76,13 @@ int main(int argc, char *argv[])
             if (event.type == SDL_MOUSEBUTTONDOWN)
             {
                 bMouseDown = true;
+                simulate = false;
             }
 
             if (event.type == SDL_MOUSEBUTTONUP)
             {
                 bMouseDown = false;
+                simulate = true;
             }
 
             if (event.type == SDL_MOUSEMOTION)
@@ -112,6 +129,22 @@ int main(int argc, char *argv[])
             }
         }
 
+        if(simulate)
+        {
+            physWorld.simulate(1.f / 60.f);
+            for(int i=0; i<tms.size(); ++i)
+            {
+                tms[i] = physWorld.getActor(i)->getWorldTransform();
+            }
+        }
+        else
+        {
+            for (int i = 0; i < tms.size(); ++i)
+            {
+                physWorld.getActor(i)->setWorldTransform(tms[i]);
+            }
+        }
+
         renderer.setCameraPosition(Vector3(0.f, 0.f, 150.f + zoom));
         renderer.clear();
 
@@ -126,13 +159,6 @@ int main(int argc, char *argv[])
         debugInfo.hullResolution = 16;
         int debugI = debugTarget % 2;
         int debugJ = 1 - debugI;
-
-        static float r = 0.f;
-        r += 0.001f;
-
-        tms[1] = Transform(Vector3(0.f), Quaternion::fromAxisAndAngle(Vector3(0.f, 0.f, 1.f), r));
-
-        
 
         for(int i=0; i< shapes.size(); ++i)
         {

@@ -17,6 +17,14 @@ public:
         return body.bodyToWorld * bodyLocalTM;
     }
 
+    void setWorldTransform(const Transform& worldTM)
+    {
+        //current = body.bodyToWorld * bodyLocalTM
+        //new = body.bodyToWorld' * bodyLocalTM
+        //=> body.bodyToWorld' = new * bodyLocalTM.inv
+        body.bodyToWorld = worldTM.inverseTransformReverse(bodyLocalTM);
+    }
+
     const std::vector<ShapeUnion>& getShapes() const
     {
         return body.shapes;

@@ -41,6 +41,16 @@ struct TTransform
         return TTransform<Scaler>(relativeTranslation, relativeRotation);
     }
 
+    //See inverseTransform. This is to get X = A * B.Inv() so that X * B = A
+    TTransform<Scaler> inverseTransformReverse(const TTransform<Scaler>& rhs) const
+    {
+        //Relative * rhs = this => Relative.translation + (Relative.rotation * rhs.translation) = this.translation
+        //Relative * rhis = this => Relative.rotation * rhs.rotation = this.rotation
+        const TQuaternion<Scaler> relativeRotation = rotation * rhs.rotation.getInverse();
+        const TVector3<Scaler> relativeTranslation = translation - relativeRotation * rhs.translation;
+        return TTransform<Scaler>(relativeTranslation, relativeRotation);
+    }
+
 	TVector3<Scaler> translation;
 	TQuaternion<Scaler> rotation;
 
