@@ -10,6 +10,7 @@
 #include "Vector4.h"
 #include "Logger.h"
 #include <sstream>
+#include "RigidBody.h"
 
 class PhysWorld
 {
@@ -48,6 +49,40 @@ public:
             }
         }
 
+        //generate contacts
+        //TODO: this is super hacky
+        contactConstraints.clear();
+        for(int i=0; i<actors.size(); ++i)
+        {
+            for(int j=i+1; j<actors.size(); ++j)
+            {
+                for (int i = 0; i < actors.size(); ++i)
+                {
+                    //todo: compound shapes
+                    RigidBody* bodyA = &actors[i]->body;
+                    RigidBody* bodyB = &actors[j]->body;
+
+                    if(gjkOverlapping(bodyA->shapes[0], bodyA->bodyToWorld * bodyA->shapes[0].asShape().localTM, bodyB->shapes[0], bodyB->bodyToWorld * bodyB->shapes[0].asShape().localTM, 20.f))
+                    {
+                        Vector3 closestA(0.f);
+                        Vector3 closestB(0.f);
+                        Vector3 normal(0.f);
+
+                        if (gjkGetClosestPoints<true>(bodyA->shapes[0], bodyA->bodyToWorld * bodyA->shapes[0].asShape().localTM, bodyB->shapes[0], bodyB->bodyToWorld * bodyB->shapes[0].asShape().localTM, nullptr, 0.f, closestA, closestB, normal))
+                        {
+                            //shapeWorld = bodyWorld * localTM => localTM = bodyWorld.inv() * shapeWorld
+                            Constraint* newConstraint = new Constraint(bodyA, bodyA->bodyToWorld.inverseTransform(closestA), bodyB, bodyB->bodyToWorld.inverseTransform(closestB));
+                            newConstraint->distance = (closestB - closestA).length();
+                            newConstraint->prepareConstraint();
+                            newConstraint->normals[0] = normal;
+                            newConstraint->maxImpulse = 0.f;
+                            constraints.push_back(newConstraint);
+                        }
+                    }
+                }
+            }
+        }
+
         //update constraints
         for (Constraint* constraint : constraints)
         {
@@ -65,6 +100,11 @@ public:
             }
 
             for (Constraint* constraint : constraints)
+            {
+                constraint->solveConstraint(invDeltaTime);
+            }
+
+            for (Constraint* constraint : contactConstraints)
             {
                 constraint->solveConstraint(invDeltaTime);
             }
@@ -142,6 +182,7 @@ public:
 private:
 	std::vector<RigidActor*> actors;
     std::vector<Constraint*> constraints;
+    std::vector<Constraint*> contactConstraints;
     Vector3 gravity;
     friend class PhysWorldDebugger;
 };
