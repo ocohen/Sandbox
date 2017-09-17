@@ -28,14 +28,14 @@ int main(int argc, char *argv[])
     float offsetY = 0.f;
 
     Sphere sphere(10.f, Transform::identity());
-    Box box(Vector3(10.f, 20.f, 1.f), Transform::identity());
+    Box box(Vector3(10.f, 20.f, 10.f), Transform::identity());
 
     std::vector<ShapeUnion> shapes;
     shapes.push_back(sphere);
     shapes.push_back(box);
 
     Transform dynTM = Transform::identity();
-    Transform staticTM(Vector3(0.f, 0.f, 0.f), Quaternion::fromAxisAndAngle(Vector3(0.f, 0.f, 1.f), PI_OVER_TWO * 0.f));
+    Transform staticTM(Vector3(0.f, 0.f, 0.f), Quaternion::fromAxisAndAngle(Vector3(0.f, 0.f, 1.f), PI_OVER_TWO * 0.5f));
 
     std::vector<Transform> tms;
     tms.push_back(dynTM);
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 
     physWorld.createRigidActor(dynTM, dynDesc);
     physWorld.createRigidActor(staticTM, staticDesc);
-
+    
 
     Vector3 green(0.f, 1.f, 0.f);
     Vector3 red(1.f, 0.f, 0.f);

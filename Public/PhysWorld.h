@@ -62,6 +62,11 @@ public:
                     RigidBody* bodyA = &actors[i]->body;
                     RigidBody* bodyB = &actors[j]->body;
 
+                    if(bodyA->invMass <= OC_BIG_EPSILON && bodyB->invMass <= OC_BIG_EPSILON)
+                    {
+                        continue;
+                    }
+
                     if(gjkOverlapping(bodyA->shapes[0], bodyA->bodyToWorld * bodyA->shapes[0].asShape().localTM, bodyB->shapes[0], bodyB->bodyToWorld * bodyB->shapes[0].asShape().localTM, 20.f))
                     {
                         Vector3 closestA(0.f);
@@ -72,11 +77,11 @@ public:
                         {
                             //shapeWorld = bodyWorld * localTM => localTM = bodyWorld.inv() * shapeWorld
                             Constraint* newConstraint = new Constraint(bodyA, bodyA->bodyToWorld.inverseTransform(closestA), bodyB, bodyB->bodyToWorld.inverseTransform(closestB));
-                            newConstraint->distance = (closestB - closestA).length();
+                            newConstraint->distance = -(closestB - closestA).length() + 2.f;
                             newConstraint->prepareConstraint();
                             newConstraint->normals[0] = normal;
-                            newConstraint->maxImpulse = 0.f;
-                            constraints.push_back(newConstraint);
+                            newConstraint->minImpulse = 0.f;
+                            contactConstraints.push_back(newConstraint);
                         }
                     }
                 }
