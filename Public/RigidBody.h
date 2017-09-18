@@ -10,13 +10,28 @@
 struct RigidBodyDesc
 {
     RigidBodyDesc()
-        : invInertia(1.f, 1.f, 1.f)
+        : com(0.f)
+        , invInertia(1.f, 1.f, 1.f)
         , invMass(1.f)
         , linearDamping(0.f)
         , angularDamping(0.f)
     {
     }
 
+    void finalize()
+    {
+        MassProperties props;
+        for (const ShapeUnion& shapeUnion : shapes)
+        {
+            props.addShape(shapeUnion, 1.f);
+        }
+
+        com = props.com;
+        invMass = props.mass == 0.f ? 0.f : 1.f / props.mass;
+        invInertia = invInertia.x != 0.f || invInertia.y != 0.f || invInertia.z != 0.f ? Vector3(1.f / props.inertia) : invInertia;
+    }
+
+    Vector3 com;
     Vector3 invInertia;
     float invMass;
     float linearDamping;
@@ -37,20 +52,11 @@ struct RigidBody
         , angularVelocity(0.f, 0.f, 0.f)
         , shapes(rigidBodyDesc.shapes)
     {
-        MassProperties props;
-        for(const ShapeUnion& shapeUnion : rigidBodyDesc.shapes)
-        {
-            props.addShape(shapeUnion, 1.f);
-        }
-
-        const Transform localTM(props.com, Quaternion(0.f, 0.f, 0.f, 1.f)); //TODO: compute inertia tensor
-
+        const Transform localTM(rigidBodyDesc.com, Quaternion(0.f, 0.f, 0.f, 1.f)); //TODO: compute inertia tensor
         bodyToWorld = actorToWorld * localTM;
-        invMass = invMass > 0.f ? 1.f / props.mass : invMass;
-        invInertia = invInertia.x != 0.f || invInertia.y != 0.f || invInertia.z != 0.f ? Vector3(1.f/props.inertia) : invInertia;
 
         //need to update shape transforms to be relative to the new body transform. We can use the localTM for this
-        for(ShapeUnion& shapeUnion : shapes)
+        for (ShapeUnion& shapeUnion : shapes)
         {
             Transform& shapeTM = shapeUnion.asShape().localTM;
             shapeTM = localTM.inverseTransform(shapeTM);

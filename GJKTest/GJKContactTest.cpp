@@ -46,7 +46,11 @@ int main(int argc, char *argv[])
     RigidBodyDesc dynDesc;
     RigidBodyDesc staticDesc;
     dynDesc.shapes.push_back(shapes[0]);
+    dynDesc.finalize();
+
     staticDesc.shapes.push_back(shapes[1]);
+    staticDesc.finalize();
+
     staticDesc.invMass = 0.f;
     staticDesc.invInertia = Vector3(0.f);
 

@@ -27,17 +27,21 @@ int main(int argc, char *argv[])
     RigidBodyDesc& simpleBodySphere = bodyDescs[0];
     simpleBodySphere.shapes.push_back(Sphere(5.f, Transform(Vector3(0.f), Quaternion(0.f, 0.f, 0.f, 1.f))));
     simpleBodySphere.linearDamping = 0.5f;
+    simpleBodySphere.finalize();
 
     RigidBodyDesc& compoundBody = bodyDescs[1];
     compoundBody.shapes.push_back(Box(Vector3(5.f), Transform(Vector3(0.f, 0.f, 0.f), Quaternion(0.f, 0.f, 0.f, 1.f))));
     compoundBody.linearDamping = 0.5f;
+    compoundBody.finalize();
 
     RigidBodyDesc& compoundBody2 = bodyDescs[2];
     compoundBody2.shapes.push_back(Box(Vector3(10.f), Transform(Vector3(0.f, 0.f, 0.f), Quaternion(0.f, 0.f, 0.f, 1.f))));
     compoundBody2.linearDamping = 0.5f;
+    compoundBody2.finalize();
 
     RigidBodyDesc rootBody;
     rootBody.shapes.push_back(Sphere(5.f, Transform(Vector3(0.f), Quaternion(0.f, 0.f, 0.f, 1.f))));
+    rootBody.finalize();
 
     const float chainOffset = 50.f;
     

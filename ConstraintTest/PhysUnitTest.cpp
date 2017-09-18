@@ -39,6 +39,7 @@ TEST_CASE("RigidActor", "[physics]")
     RigidBodyDesc desc;
     desc.shapes.push_back(Sphere(5.f, Transform(Vector3(0.f), Quaternion(0.f, 0.f, 0.f, 1.f))));
     desc.shapes.push_back(Sphere(5.f, Transform(Vector3(10.f, 0.f, 0.f), Quaternion(0.f, 0.f, 0.f, 1.f))));
+    desc.finalize();
     RigidActor actor(actorTM, desc);;
 
     REQUIRE(Vector3::isNearlyEqual(actor.getWorldTransform().translation, actorLocation));
@@ -50,7 +51,8 @@ TEST_CASE("Constraint", "[physics]")
     const Vector3 b1(0.f);
     RigidBodyDesc simDesc;
     simDesc.shapes.push_back(Sphere(1.f, Transform(b1)));
-    
+    simDesc.finalize();
+
     const Vector3 b2(3.f, 2.f, 0.f);
     RigidBody sim(Transform(b2), simDesc);
     sim.invInertia = Vector3(1.f);
