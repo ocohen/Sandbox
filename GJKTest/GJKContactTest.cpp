@@ -28,10 +28,10 @@ int main(int argc, char *argv[])
     float offsetY = 0.f;
 
     Sphere sphere(10.f, Transform::identity());
-    Box box(Vector3(10.f, 20.f, 10.f), Transform::identity());
+    Box box(Vector3(10.f, 20.f, 1.f), Transform::identity());
 
     std::vector<ShapeUnion> shapes;
-    shapes.push_back(sphere);
+    shapes.push_back(box);
     shapes.push_back(box);
 
     Transform dynTM = Transform::identity();

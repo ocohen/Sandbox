@@ -53,7 +53,7 @@ public:
         //generate contacts
         //TODO: this is super hacky
         contactConstraints.clear();
-        if(false)
+        if(true)
         {
             for(int i=0; i<actors.size(); ++i)
             {
