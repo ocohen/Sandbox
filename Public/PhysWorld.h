@@ -70,7 +70,7 @@ public:
                             continue;
                         }
 
-                        if(gjkOverlapping(bodyA->shapes[0], bodyA->bodyToWorld * bodyA->shapes[0].asShape().localTM, bodyB->shapes[0], bodyB->bodyToWorld * bodyB->shapes[0].asShape().localTM, 20.f))
+                        if(gjkOverlapping(bodyA->shapes[0], bodyA->bodyToWorld * bodyA->shapes[0].asShape().localTM, bodyB->shapes[0], bodyB->bodyToWorld * bodyB->shapes[0].asShape().localTM, 2.f))
                         {
                             Vector3 closestA(0.f);
                             Vector3 closestB(0.f);

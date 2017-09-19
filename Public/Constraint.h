@@ -34,6 +34,7 @@ struct Constraint
     float maxImpulse;
     float minImpulse;
     float accumulatedImpulse;
+    float baumgarte;
 
     Logger* logger;
     std::string loggerKey;
@@ -51,6 +52,7 @@ struct Constraint
         , maxImpulse(FLT_MAX)
         , minImpulse(-FLT_MAX)
         , accumulatedImpulse(0.f)
+        , baumgarte(1.f)
         , logger(nullptr)
     {
         const Transform body1TM = body1 ? body1->bodyToWorld : Transform::identity();
@@ -118,7 +120,7 @@ struct Constraint
                 const float r2squaredMinusR2Dot = r2.length2()*weight2 - r2.dotProduct(normal*weight2)*r2.dotProduct(normal);
                 const float r1squaredMinusR1Dot = r1.length2()*weight1 - r1.dotProduct(normal*weight1)*r1.dotProduct(normal);
                 const float lambda = -relVelocity / (1.f + r2squaredMinusR2Dot + r1squaredMinusR1Dot);
-                const float computedImpulse = (lambda + geometricError * invDeltaTime * 0.05f);
+                const float computedImpulse = (lambda + geometricError * invDeltaTime * baumgarte);
                 const float prevAccumulatedImpulse = accumulatedImpulse;
                 const float newTotalImpulse = clamp(prevAccumulatedImpulse + computedImpulse, minImpulse, maxImpulse);
                 const float finalComputedImpulse = newTotalImpulse - prevAccumulatedImpulse;

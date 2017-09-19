@@ -29,33 +29,45 @@ int main(int argc, char *argv[])
 
     Sphere sphere(10.f, Transform::identity());
     Box box(Vector3(10.f, 20.f, 1.f), Transform::identity());
+    Box floor(Vector3(100.f, 5.f, 100.f), Transform::identity());
 
     std::vector<ShapeUnion> shapes;
+    shapes.push_back(sphere);
     shapes.push_back(box);
-    shapes.push_back(box);
+    shapes.push_back(floor);
 
     Transform dynTM = Transform::identity();
     Transform staticTM(Vector3(0.f, 0.f, 0.f), Quaternion::fromAxisAndAngle(Vector3(0.f, 0.f, 1.f), PI_OVER_TWO * 0.5f));
+    Transform floorTM(Vector3(0.f, -20.f, 0.f));
 
     std::vector<Transform> tms;
     tms.push_back(dynTM);
     tms.push_back(staticTM);
+    tms.push_back(floorTM);
 
-    PhysWorld physWorld(Vector3(0.f, -10.f, 0.f));
+    PhysWorld physWorld(Vector3(0.f, -100.f, 0.f));
 
     RigidBodyDesc dynDesc;
     RigidBodyDesc staticDesc;
+    RigidBodyDesc floorDesc;
     dynDesc.shapes.push_back(shapes[0]);
     dynDesc.finalize();
 
     staticDesc.shapes.push_back(shapes[1]);
     staticDesc.finalize();
 
+    floorDesc.shapes.push_back(shapes[2]);
+    floorDesc.finalize();
+
     staticDesc.invMass = 0.f;
     staticDesc.invInertia = Vector3(0.f);
 
+    floorDesc.invMass = 0.f;
+    floorDesc.invInertia = Vector3(0.f);
+
     physWorld.createRigidActor(dynTM, dynDesc);
     physWorld.createRigidActor(staticTM, staticDesc);
+    physWorld.createRigidActor(floorTM, floorDesc);
     
 
     Vector3 green(0.f, 1.f, 0.f);
