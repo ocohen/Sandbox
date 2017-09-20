@@ -80,10 +80,11 @@ public:
                             {
                                 //shapeWorld = bodyWorld * localTM => localTM = bodyWorld.inv() * shapeWorld
                                 Constraint* newConstraint = new Constraint(bodyA, bodyA->bodyToWorld.inverseTransform(closestA), bodyB, bodyB->bodyToWorld.inverseTransform(closestB));
-                                newConstraint->distance = -(closestB - closestA).length() + 2.f;
+                                newConstraint->distance = 2.f;
                                 newConstraint->prepareConstraint();
                                 newConstraint->normals[0] = normal;
                                 newConstraint->minImpulse = 0.f;
+                                newConstraint->baumgarte = 0.01f;
                                 contactConstraints.push_back(newConstraint);
                             }
                         }
@@ -187,6 +188,8 @@ public:
     Constraint* getConstraint(int idx){ return constraints[idx]; }
 
     Logger* logger;
+
+    const std::vector<Constraint*>& getContactConstraints(){ return contactConstraints; }
 
 private:
 	std::vector<RigidActor*> actors;

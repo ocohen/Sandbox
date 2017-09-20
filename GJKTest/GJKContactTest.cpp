@@ -28,11 +28,11 @@ int main(int argc, char *argv[])
     float offsetY = 0.f;
 
     Sphere sphere(10.f, Transform::identity());
-    Box box(Vector3(10.f, 20.f, 1.f), Transform::identity());
+    Box box(Vector3(10.f, 10.f, 10.f), Transform::identity());
     Box floor(Vector3(100.f, 5.f, 100.f), Transform::identity());
 
     std::vector<ShapeUnion> shapes;
-    shapes.push_back(sphere);
+    shapes.push_back(box);
     shapes.push_back(box);
     shapes.push_back(floor);
 
@@ -151,6 +151,15 @@ int main(int argc, char *argv[])
             for(int i=0; i<tms.size(); ++i)
             {
                 tms[i] = physWorld.getActor(i)->getWorldTransform();
+            }
+
+            for(const Constraint* contact : physWorld.getContactConstraints())
+            {
+                if(contact->accumulatedImpulse > 0)
+                {
+                    //simulate = false;
+                    break;
+                }
             }
         }
         else

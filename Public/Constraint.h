@@ -126,25 +126,28 @@ struct Constraint
                 const float finalComputedImpulse = newTotalImpulse - prevAccumulatedImpulse;
                 accumulatedImpulse = newTotalImpulse;
 
-                const Vector3 correctionImpulse = finalComputedImpulse * normal;
+                if(!isNearlyEqual(finalComputedImpulse, OC_BIG_EPSILON))
+                {
+                    const Vector3 correctionImpulse = finalComputedImpulse * normal;
 
-                if (logger)
-                {
-                    logger->log(loggerKey, std::string("lambda"), -lambda);
-                }
+                    if (logger)
+                    {
+                        logger->log(loggerKey, std::string("lambda"), -lambda);
+                    }
 
-                if(invMass1 > 0)
-                {
-                    const Vector3 b1LinearImpulse = -correctionImpulse * weight1 * (1.f/ invMass1);  //gross, compute better above
-                    body1->linearVelocity += b1LinearImpulse * invMass1;
-                    body1->angularVelocity += Vector3::crossProduct(r1, b1LinearImpulse) * body1->invInertia.x;    //terrible assumes completely symmetric
-                }
-                
-                if(invMass2 > 0)
-                {
-                    const Vector3 b2LinearImpulse = correctionImpulse * weight2 * (1.f/ invMass2);
-                    body2->linearVelocity += b2LinearImpulse * invMass2;
-                    body2->angularVelocity += Vector3::crossProduct(r2, b2LinearImpulse) * body2->invInertia.x;   //terrible assumes completely symmetric
+                    if (invMass1 > 0)
+                    {
+                        const Vector3 b1LinearImpulse = -correctionImpulse * weight1 * (1.f / invMass1);  //gross, compute better above
+                        body1->linearVelocity += b1LinearImpulse * invMass1;
+                        body1->angularVelocity += Vector3::crossProduct(r1, b1LinearImpulse) * body1->invInertia.x;    //terrible assumes completely symmetric
+                    }
+
+                    if (invMass2 > 0)
+                    {
+                        const Vector3 b2LinearImpulse = correctionImpulse * weight2 * (1.f / invMass2);
+                        body2->linearVelocity += b2LinearImpulse * invMass2;
+                        body2->angularVelocity += Vector3::crossProduct(r2, b2LinearImpulse) * body2->invInertia.x;   //terrible assumes completely symmetric
+                    }
                 }
             }
         }
