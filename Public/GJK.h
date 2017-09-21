@@ -393,29 +393,52 @@ struct GJKDebugInfo
     std::vector<Vector3> hullVerts;
 };
 
-void getClosestPointsForSimplex(Vector3* simplex, int dimension, const Vector3& closestPt, Vector3* simplexAPts, Vector3* simplexBPts, Vector3& closestA, Vector3& closestB, Vector3& aToBNormal, const Transform& a2World)
+struct GJKInfo
 {
-    reduceSimplex(simplex, dimension, closestPt, simplexAPts, simplexBPts);
-    float uvw[3] = {0.f, 0.f, 0.f};
+    bool getClosestPoints;
+    bool getNormal;
 
-    getClosestToOriginInSimplex(simplex, dimension, uvw);
-    closestA = Vector3(0.f);
-    closestB = Vector3(0.f);
+    Vector3 closestA;
+    Vector3 closestB;
+    Vector3 aToBNormal;
 
-    for(int i=0; i <= dimension; ++i)
+    GJKInfo()
+        : getClosestPoints(true)
+        , getNormal(true)
     {
-        closestA += uvw[i] * simplexAPts[i];
-        closestB += uvw[i] * simplexBPts[i];
     }
+};
 
-    closestA = a2World.transformPoint(closestA);
-    closestB = a2World.transformPoint(closestB);
+void getClosestPointsForSimplex(Vector3* simplex, int dimension, const Vector3& closestPt, Vector3* simplexAPts, Vector3* simplexBPts, GJKInfo& gjkInfo, const Transform& a2World)
+{
+    if(gjkInfo.getClosestPoints)
+    {
+        reduceSimplex(simplex, dimension, closestPt, simplexAPts, simplexBPts);
+        float uvw[3] = { 0.f, 0.f, 0.f };
 
-    aToBNormal = a2World.transformVector(-closestPt.getSafeNormal());
+        getClosestToOriginInSimplex(simplex, dimension, uvw);
+        gjkInfo.closestA = Vector3(0.f);
+        gjkInfo.closestB = Vector3(0.f);
+
+        for (int i = 0; i <= dimension; ++i)
+        {
+            gjkInfo.closestA += uvw[i] * simplexAPts[i];
+            gjkInfo.closestB += uvw[i] * simplexBPts[i];
+        }
+
+        gjkInfo.closestA = a2World.transformPoint(gjkInfo.closestA);
+        gjkInfo.closestB = a2World.transformPoint(gjkInfo.closestB);
+
+        if(gjkInfo.getNormal)
+        {
+            gjkInfo.aToBNormal = a2World.transformVector(-closestPt.getSafeNormal());
+        }
+    }
+   
 }
 
 template <bool debug>
-bool gjkGetClosestPoints(const ShapeUnion& a, const Transform& a2World, const ShapeUnion& b, const Transform& b2World, GJKDebugInfo* debugInfo, float margin, Vector3& closestA, Vector3& closestB, Vector3& aToBNormal)
+bool gjkGetClosestPoints(const ShapeUnion& a, const Transform& a2World, const ShapeUnion& b, const Transform& b2World, GJKDebugInfo* debugInfo, float margin, GJKInfo& gjkInfo)
 {
     const Transform bLocal2A = a2World.inverseTransform(b2World);
 
@@ -494,7 +517,7 @@ bool gjkGetClosestPoints(const ShapeUnion& a, const Transform& a2World, const Sh
                            {
                                debugInfo->perFrameInfo.back().result = GJKDebugPerFrameInfo::NoOverlap;
                            }
-                           getClosestPointsForSimplex(simplex, dimension, closestPt, simplexAPts, simplexBPts, closestA, closestB, aToBNormal, a2World);
+                           getClosestPointsForSimplex(simplex, dimension, closestPt, simplexAPts, simplexBPts, gjkInfo, a2World);
                            return true;
                        }
                    }
@@ -514,7 +537,7 @@ bool gjkGetClosestPoints(const ShapeUnion& a, const Transform& a2World, const Sh
                {
                    debugInfo->perFrameInfo.back().result = GJKDebugPerFrameInfo::NoOverlap;
                }
-               getClosestPointsForSimplex(simplex, dimension, closestPt, simplexAPts, simplexBPts, closestA, closestB, aToBNormal, a2World);
+               getClosestPointsForSimplex(simplex, dimension, closestPt, simplexAPts, simplexBPts, gjkInfo, a2World);
                 return true;
            }
        }
@@ -524,7 +547,7 @@ bool gjkGetClosestPoints(const ShapeUnion& a, const Transform& a2World, const Sh
            {
                debugInfo->perFrameInfo.back().result = GJKDebugPerFrameInfo::NoOverlap;
            }
-           getClosestPointsForSimplex(simplex, dimension, closestPt, simplexAPts, simplexBPts, closestA, closestB, aToBNormal, a2World);
+           getClosestPointsForSimplex(simplex, dimension, closestPt, simplexAPts, simplexBPts, gjkInfo, a2World);
            return true;
        }
     }
@@ -532,8 +555,8 @@ bool gjkGetClosestPoints(const ShapeUnion& a, const Transform& a2World, const Sh
 
 bool gjkOverlapping(const ShapeUnion& a, const Transform& a2World, const ShapeUnion& b, const Transform& b2World, float margin=0.f)
 {
-    Vector3 closestA, closestB, normal;
-    return !gjkGetClosestPoints<false>(a, a2World, b, b2World, nullptr, margin, closestA, closestB, normal);
+    GJKInfo info;
+    return !gjkGetClosestPoints<false>(a, a2World, b, b2World, nullptr, margin, info);
 }
 
 #endif

@@ -72,17 +72,15 @@ public:
 
                         if(gjkOverlapping(bodyA->shapes[0], bodyA->bodyToWorld * bodyA->shapes[0].asShape().localTM, bodyB->shapes[0], bodyB->bodyToWorld * bodyB->shapes[0].asShape().localTM, 2.f))
                         {
-                            Vector3 closestA(0.f);
-                            Vector3 closestB(0.f);
-                            Vector3 normal(0.f);
+                            GJKInfo info;
 
-                            if (gjkGetClosestPoints<true>(bodyA->shapes[0], bodyA->bodyToWorld * bodyA->shapes[0].asShape().localTM, bodyB->shapes[0], bodyB->bodyToWorld * bodyB->shapes[0].asShape().localTM, nullptr, 0.f, closestA, closestB, normal))
+                            if (gjkGetClosestPoints<true>(bodyA->shapes[0], bodyA->bodyToWorld * bodyA->shapes[0].asShape().localTM, bodyB->shapes[0], bodyB->bodyToWorld * bodyB->shapes[0].asShape().localTM, nullptr, 0.f, info))
                             {
                                 //shapeWorld = bodyWorld * localTM => localTM = bodyWorld.inv() * shapeWorld
-                                Constraint* newConstraint = new Constraint(bodyA, bodyA->bodyToWorld.inverseTransform(closestA), bodyB, bodyB->bodyToWorld.inverseTransform(closestB));
+                                Constraint* newConstraint = new Constraint(bodyA, bodyA->bodyToWorld.inverseTransform(info.closestA), bodyB, bodyB->bodyToWorld.inverseTransform(info.closestB));
                                 newConstraint->distance = 2.f;
                                 newConstraint->prepareConstraint();
-                                newConstraint->normals[0] = normal;
+                                newConstraint->normals[0] = info.aToBNormal;
                                 newConstraint->minImpulse = 0.f;
                                 newConstraint->baumgarte = 0.01f;
                                 contactConstraints.push_back(newConstraint);

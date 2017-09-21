@@ -136,9 +136,7 @@ int main(int argc, char *argv[])
 
         for(int i=0; i< shapes.size(); ++i)
         {
-            Vector3 closestA(0.f);
-            Vector3 closestB(0.f);
-            Vector3 normal(0.f);
+            GJKInfo gjkInfo;
 
             bool bOverlap = false;
 
@@ -149,12 +147,12 @@ int main(int argc, char *argv[])
                     if (gjkOverlapping(ShapeUnion(shapes[i]), tms[i], ShapeUnion(shapes[j]), tms[j], 20.f))
                     {
                         bOverlap = true;
-                        if(gjkGetClosestPoints<true>(ShapeUnion(shapes[i]), tms[i], ShapeUnion(shapes[j]), tms[j], debugEnabled ? &debugInfo : nullptr, 0.f, closestA, closestB, normal))
+                        if(gjkGetClosestPoints<true>(ShapeUnion(shapes[i]), tms[i], ShapeUnion(shapes[j]), tms[j], debugEnabled ? &debugInfo : nullptr, 0.f, gjkInfo))
                         {
-                            renderer.drawPoint(closestA, &red, 3.f);
-                            renderer.drawPoint(closestB, &red, 3.f);
-                            renderer.drawLine(closestA, closestA + normal * 10.f, &red, 3.f);
-                            renderer.drawSphere(closestA + normal * 10.f, 0.5f, 4, &red, 3.f);
+                            renderer.drawPoint(gjkInfo.closestA, &red, 3.f);
+                            renderer.drawPoint(gjkInfo.closestB, &red, 3.f);
+                            renderer.drawLine(gjkInfo.closestA, gjkInfo.closestA + gjkInfo.aToBNormal * 10.f, &red, 3.f);
+                            renderer.drawSphere(gjkInfo.closestA + gjkInfo.aToBNormal * 10.f, 0.5f, 4, &red, 3.f);
                         }
                     }
                 }
