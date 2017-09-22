@@ -409,6 +409,23 @@ struct GJKInfo
     }
 };
 
+void computeBasis(const Vector3& n, Vector3& b, Vector3& c)
+{
+    //Credit to Erin Catto: http://box2d.org/2014/02/computing-a-basis/
+    const Vector3 a = n.getSafeNormal();
+    if(fabs(n.x) >= 0.57735f)
+    {
+        b = Vector3(a.y, -a.x, 0.f);
+    }
+    else
+    {
+        b = Vector3(0.f, a.z, -a.y);
+    }
+
+    b = b.getSafeNormal();
+    c = Vector3::crossProduct(a, b);
+}
+
 void getClosestPointsForSimplex(Vector3* simplex, int dimension, const Vector3& closestPt, Vector3* simplexAPts, Vector3* simplexBPts, GJKInfo& gjkInfo, const Transform& a2World)
 {
     if(gjkInfo.getClosestPoints)

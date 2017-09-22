@@ -40,8 +40,9 @@ int main(int argc, char *argv[])
     tms.push_back(dynTM);
     tms.push_back(staticTM);
 
-    Vector3 green(0.f, 1.f, 0.f);
     Vector3 red(1.f, 0.f, 0.f);
+    Vector3 green(0.f, 1.f, 0.f);
+    Vector3 blue(0.f, 0.f, 1.f);
 
     bool debugEnabled = false;
     int debugUpToFrame = 0;
@@ -153,6 +154,14 @@ int main(int argc, char *argv[])
                             renderer.drawPoint(gjkInfo.closestB, &red, 3.f);
                             renderer.drawLine(gjkInfo.closestA, gjkInfo.closestA + gjkInfo.aToBNormal * 10.f, &red, 3.f);
                             renderer.drawSphere(gjkInfo.closestA + gjkInfo.aToBNormal * 10.f, 0.5f, 4, &red, 3.f);
+
+                            Vector3 u,v;
+                            computeBasis(gjkInfo.aToBNormal, u,v);
+                            renderer.drawLine(gjkInfo.closestA, gjkInfo.closestA + u * 10.f, &green, 3.f);
+                            renderer.drawSphere(gjkInfo.closestA + u * 10.f, 0.5f, 4, &red, 3.f);
+
+                            renderer.drawLine(gjkInfo.closestA, gjkInfo.closestA + v * 10.f, &blue, 3.f);
+                            renderer.drawSphere(gjkInfo.closestA + v * 10.f, 0.5f, 4, &red, 3.f);
                         }
                     }
                 }
