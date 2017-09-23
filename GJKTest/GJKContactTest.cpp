@@ -37,6 +37,7 @@ int main(int argc, char *argv[])
     shapes.push_back(floor);
 
     Transform dynTM = Transform::identity();
+    Transform dynTM2 = Transform(Vector3(0.f, 30.f, 0.f));
     Transform staticTM(Vector3(0.f, 0.f, 0.f), Quaternion::fromAxisAndAngle(Vector3(0.f, 0.f, 1.f), PI_OVER_TWO * 0.5f));
     Transform floorTM(Vector3(0.f, -20.f, 0.f));
 
@@ -44,6 +45,8 @@ int main(int argc, char *argv[])
     tms.push_back(dynTM);
     tms.push_back(staticTM);
     tms.push_back(floorTM);
+
+    
 
     PhysWorld physWorld(Vector3(0.f, -100.f, 0.f));
 
@@ -68,7 +71,6 @@ int main(int argc, char *argv[])
     physWorld.createRigidActor(dynTM, dynDesc);
     physWorld.createRigidActor(staticTM, staticDesc);
     physWorld.createRigidActor(floorTM, floorDesc);
-    
 
     Vector3 green(0.f, 1.f, 0.f);
     Vector3 red(1.f, 0.f, 0.f);

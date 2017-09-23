@@ -93,25 +93,29 @@ public:
                                 newConstraint->baumgarte = 0.01f;
                                 contactConstraints.push_back(newConstraint);
 
-                                /*Vector3 u,v;
+                                const float grav = gravity.length();
+                                const float massA = bodyA->invMass > 0.f ? 1.f / bodyA->invMass : 0.f;
+                                const float massB = bodyB->invMass > 0.f ? 1.f / bodyB->invMass : 0.f;
+                                float gravMass = grav * (massA + massB) * 0.01f;
+                                Vector3 u, v;
                                 computeBasis(info.aToBNormal, u, v);
                                 Constraint* fric1 = new Constraint(bodyA, localA, bodyB, localB);
                                 fric1->distance = 2.f;
                                 fric1->prepareConstraint();
                                 fric1->normals[0] = u;
-                                fric1->minImpulse = -gravity.length();   //TODO: use proper mass
-                                fric1->maxImpulse = gravity.length();   //TODO: use proper mass
-                                fric1->baumgarte = 0.01f;
+                                fric1->minImpulse = -gravMass;
+                                fric1->maxImpulse = gravMass;
+                                fric1->baumgarte = 0.0f;
                                 contactConstraints.push_back(fric1);
 
                                 Constraint* fric2 = new Constraint(bodyA, localA, bodyB, localB);
                                 fric2->distance = 2.f;
                                 fric2->prepareConstraint();
                                 fric2->normals[0] = v;
-                                fric2->minImpulse = -gravity.length();   //TODO: use proper mass
-                                fric2->maxImpulse = gravity.length();   //TODO: use proper mass
-                                fric2->baumgarte = 0.01f;
-                                contactConstraints.push_back(fric2);*/
+                                fric2->minImpulse = -gravMass;
+                                fric2->maxImpulse = gravMass;
+                                fric2->baumgarte = 0.0f;
+                                contactConstraints.push_back(fric2);
                             }
                         }
                     }
