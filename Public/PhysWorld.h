@@ -13,6 +13,67 @@
 #include "RigidBody.h"
 #include "GJK.h"
 
+struct ContactCache
+{
+    RigidBody* bodyA;
+    RigidBody* bodyB;
+
+    Vector3 contactsA[4];
+    Vector3 contactsB[4];
+    int nextIdx;
+    int numContacts;
+
+    ContactCache(RigidBody* inA, RigidBody* inB)
+        : bodyA(inA)
+        , bodyB(inB)
+        , nextIdx(0)
+        , numContacts(0)
+    {
+    }
+
+    bool areWithinThreshold(const Vector3& x, const Vector3& y)
+    {
+        return (x - y).length2() < (0.1f * 0.1f);
+    }
+
+    void addContactPair(const Vector3& localAPt, const Vector3& localBPt)
+    {
+        constexpr int numContactsPossible = sizeof(contactsA) / sizeof(contactsA[0]);
+        //first check if it's a new point
+        for(int i=0; i<numContacts; ++i)
+        {
+            const bool aMatches = areWithinThreshold(localAPt, contactsA[i]);
+            const bool bMatches = areWithinThreshold(localBPt, contactsB[i]);
+
+            if(aMatches && bMatches)
+            {
+                return;
+            }
+            else if(aMatches)
+            {
+                contactsA[i] = localAPt;
+                contactsB[i] = localBPt;
+                return;
+            }
+            else if(bMatches)
+            {
+                contactsA[i] = localAPt;
+                contactsB[i] = localBPt;
+                return;
+            }
+        }
+
+        //actually a new contact point
+        contactsA[nextIdx] = localAPt;
+        contactsB[nextIdx] = localBPt;
+        nextIdx = (nextIdx + 1) % numContactsPossible;
+        if(numContacts < 4)
+        {
+            ++numContacts;
+        }       
+    }
+};
+
 class PhysWorld
 {
 public:
