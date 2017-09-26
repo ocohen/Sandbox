@@ -18,8 +18,9 @@ struct ContactCache
     RigidBody* bodyA;
     RigidBody* bodyB;
 
-    Vector3 contactsA[4];
-    Vector3 contactsB[4];
+    Transform contactsA[4];
+    Transform contactsB[4];
+    Vector3 normals[4]; //TODO: this needs to be local to A
     int nextIdx;
     int numContacts;
 
@@ -28,17 +29,34 @@ struct ContactCache
         , bodyB(inB)
         , nextIdx(0)
         , numContacts(0)
+        , clearCount(0)
+        , timeToDropContact(1)
     {
     }
 
-    bool areWithinThreshold(const Vector3& x, const Vector3& y)
+    bool areWithinThreshold(const Transform& x, const Transform& y)
     {
-        return (x - y).length2() < (0.1f * 0.1f);
+        return false;//(x.translation - y.translation).length2() < (0.1f * 0.1f);   //TODO: this isn't quite right for rotations
     }
 
-    void addContactPair(const Vector3& localAPt, const Vector3& localBPt)
+    static constexpr int numContactsPossible() 
     {
-        constexpr int numContactsPossible = sizeof(contactsA) / sizeof(contactsA[0]);
+        return sizeof(contactsA) / sizeof(contactsA[0]);
+    }
+
+    int getOldestIdx() const
+    {
+        return (nextIdx - numContacts) % numContactsPossible();
+    }
+
+    bool hasContacts() const
+    {
+        return numContacts > 0;
+    }
+
+    void addContactPair(const Transform& localAPt, const Transform& localBPt, const Vector3& normal)
+    {
+        //TODO: this doesn't properly handle updating oldest, also doesn't handle local normal
         //first check if it's a new point
         for(int i=0; i<numContacts; ++i)
         {
@@ -66,12 +84,35 @@ struct ContactCache
         //actually a new contact point
         contactsA[nextIdx] = localAPt;
         contactsB[nextIdx] = localBPt;
-        nextIdx = (nextIdx + 1) % numContactsPossible;
+        normals[nextIdx] = normal;
+        nextIdx = (nextIdx + 1) % numContactsPossible();
         if(numContacts < 4)
         {
             ++numContacts;
         }       
     }
+
+    void removeOldestContact()
+    {
+        if(numContacts > 0)
+        {
+            --numContacts;
+        }
+    }
+
+    void tickCache()
+    {
+        ++clearCount;
+        if(clearCount >= timeToDropContact)
+        {
+            removeOldestContact();
+            clearCount = 0;
+        }
+    }
+
+private:
+    int clearCount;
+    int timeToDropContact;
 };
 
 class PhysWorld
@@ -112,102 +153,105 @@ public:
         }
 
         //generate contacts
-
-
-        //TODO: this is super hacky. We quickly see which contact constraints were active last frame and use that to enable friction
-        struct ContactPair
-        {
-            RigidBody* bodyA;
-            RigidBody* bodyB;
-        };
-
-        std::vector<ContactPair> prevContacts;
-
-        for(Constraint* c : contactConstraints)
-        {
-            if(c->accumulatedImpulse > 0.f && c->minImpulse == 0.f) //super bad way to check if it's a contact constraint and not friction
-            {
-                prevContacts.push_back(ContactPair {c->body1, c->body2});                
-            }
-        }
-
-        //TODO: this is super hacky
-        for(Constraint* c : contactConstraints)
-        {
-            delete c;
-        }
-
-
-        contactConstraints.clear();
         if(true)
         {
             for(int i=0; i<actors.size(); ++i)
             {
                 for(int j=i+1; j<actors.size(); ++j)
                 {
-                    for (int i = 0; i < actors.size(); ++i)
+                    //todo: compound shapes
+                    RigidBody* bodyA = &actors[i]->body;
+                    RigidBody* bodyB = &actors[j]->body;
+
+                    if(bodyA->invMass <= OC_BIG_EPSILON && bodyB->invMass <= OC_BIG_EPSILON)
                     {
-                        //todo: compound shapes
-                        RigidBody* bodyA = &actors[i]->body;
-                        RigidBody* bodyB = &actors[j]->body;
+                        continue;
+                    }
 
-                        if(bodyA->invMass <= OC_BIG_EPSILON && bodyB->invMass <= OC_BIG_EPSILON)
+                    if(gjkOverlapping(bodyA->shapes[0], bodyA->bodyToWorld * bodyA->shapes[0].asShape().localTM, bodyB->shapes[0], bodyB->bodyToWorld * bodyB->shapes[0].asShape().localTM, 2.f))
+                    {
+                        GJKInfo info;
+
+                        if (gjkGetClosestPoints<true>(bodyA->shapes[0], bodyA->bodyToWorld * bodyA->shapes[0].asShape().localTM, bodyB->shapes[0], bodyB->bodyToWorld * bodyB->shapes[0].asShape().localTM, nullptr, 0.f, info))
                         {
-                            continue;
-                        }
+                            const Transform localA = bodyA->bodyToWorld.inverseTransform(info.closestA);
+                            const Transform localB = bodyB->bodyToWorld.inverseTransform(info.closestB);
 
-                        if(gjkOverlapping(bodyA->shapes[0], bodyA->bodyToWorld * bodyA->shapes[0].asShape().localTM, bodyB->shapes[0], bodyB->bodyToWorld * bodyB->shapes[0].asShape().localTM, 200.f))
-                        {
-                            GJKInfo info;
-
-                            if (gjkGetClosestPoints<true>(bodyA->shapes[0], bodyA->bodyToWorld * bodyA->shapes[0].asShape().localTM, bodyB->shapes[0], bodyB->bodyToWorld * bodyB->shapes[0].asShape().localTM, nullptr, 0.f, info))
+                            ContactCache* useCache = nullptr;
+                            for(ContactCache& cache : contactCaches)
                             {
-                                const Transform localA = bodyA->bodyToWorld.inverseTransform(info.closestA);
-                                const Transform localB = bodyB->bodyToWorld.inverseTransform(info.closestB);
-
-                                Constraint* newConstraint = new Constraint(bodyA, localA, bodyB, localB);
-                                newConstraint->distance = 2.f;
-                                newConstraint->prepareConstraint();
-                                newConstraint->normals[0] = info.aToBNormal;
-                                newConstraint->minImpulse = 0.f;
-                                newConstraint->baumgarte = 0.01f;
-                                contactConstraints.push_back(newConstraint);
-
-                                for(ContactPair& pair : prevContacts)
+                                if(cache.bodyA == bodyA && cache.bodyB == bodyB)
                                 {
-                                    if(pair.bodyA == bodyA && pair.bodyB == bodyB)
-                                    {
-                                        const float grav = gravity.length();
-                                        const float massA = bodyA->invMass > 0.f ? 1.f / bodyA->invMass : 0.f;
-                                        const float massB = bodyB->invMass > 0.f ? 1.f / bodyB->invMass : 0.f;
-                                        float gravMass = grav * (massA + massB) * 0.01f;
-                                        Vector3 u, v;
-                                        computeBasis(info.aToBNormal, u, v);
-                                        Constraint* fric1 = new Constraint(bodyA, localA, bodyB, localB);
-                                        fric1->distance = 2.f;
-                                        fric1->prepareConstraint();
-                                        fric1->normals[0] = u;
-                                        fric1->minImpulse = -gravMass;
-                                        fric1->maxImpulse = gravMass;
-                                        fric1->baumgarte = 0.0f;
-                                        contactConstraints.push_back(fric1);
-
-                                        Constraint* fric2 = new Constraint(bodyA, localA, bodyB, localB);
-                                        fric2->distance = 2.f;
-                                        fric2->prepareConstraint();
-                                        fric2->normals[0] = v;
-                                        fric2->minImpulse = -gravMass;
-                                        fric2->maxImpulse = gravMass;
-                                        fric2->baumgarte = 0.0f;
-                                        contactConstraints.push_back(fric2);
-                                    }
+                                    useCache = &cache;
+                                    break;
                                 }
-
-                                
                             }
+
+                            if(!useCache)
+                            {
+                                contactCaches.emplace_back(bodyA, bodyB);
+                                useCache = &contactCaches.back();
+                            }
+
+                            useCache->addContactPair(localA, localB, info.aToBNormal);
                         }
                     }
                 }
+            }
+        }
+
+        //TODO: this is super hacky
+        for (Constraint* c : contactConstraints)
+        {
+            delete c;
+        }
+
+        //generate constraints per contact
+        contactConstraints.clear();
+
+        for(ContactCache& cache : contactCaches)
+        {
+            RigidBody* bodyA = cache.bodyA;
+            RigidBody* bodyB = cache.bodyB;
+
+            for(int i=0; i<cache.numContacts; ++i)
+            {
+                int pairIdx = (cache.getOldestIdx() + i) % cache.numContactsPossible();
+                const Transform& localA = cache.contactsA[pairIdx];
+                const Transform& localB = cache.contactsB[pairIdx];
+                const Vector3& normal = cache.normals[pairIdx]; //TODO: this is not localized properly
+
+                Constraint* newConstraint = new Constraint(bodyA, localA, bodyB, localB);
+                newConstraint->distance = 2.f;
+                newConstraint->prepareConstraint();
+                newConstraint->normals[0] = normal;
+                newConstraint->minImpulse = 0.f;
+                newConstraint->baumgarte = 0.01f;
+                contactConstraints.push_back(newConstraint);
+
+                const float grav = gravity.length();
+                const float massA = bodyA->invMass > 0.f ? 1.f / bodyA->invMass : 0.f;
+                const float massB = bodyB->invMass > 0.f ? 1.f / bodyB->invMass : 0.f;
+                float gravMass = grav * (massA + massB) * 0.01f;
+                Vector3 u, v;
+                computeBasis(normal, u, v);
+                Constraint* fric1 = new Constraint(bodyA, localA, bodyB, localB);
+                fric1->distance = 2.f;
+                fric1->prepareConstraint();
+                fric1->normals[0] = u;
+                fric1->minImpulse = -gravMass;
+                fric1->maxImpulse = gravMass;
+                fric1->baumgarte = 0.0f;
+                //contactConstraints.push_back(fric1);
+
+                Constraint* fric2 = new Constraint(bodyA, localA, bodyB, localB);
+                fric2->distance = 2.f;
+                fric2->prepareConstraint();
+                fric2->normals[0] = v;
+                fric2->minImpulse = -gravMass;
+                fric2->maxImpulse = gravMass;
+                fric2->baumgarte = 0.0f;
+                //contactConstraints.push_back(fric2);
             }
         }
 
@@ -269,6 +313,11 @@ public:
                 rb.bodyToWorld.rotation = finalQ;*/
             }
         }
+
+        for(ContactCache& cache : contactCaches)
+        {
+            cache.tickCache();
+        }
     }
 
     int createRigidActor(const Transform& bodyToWorld, const RigidBodyDesc& rigidBodyDesc)
@@ -313,6 +362,7 @@ private:
 	std::vector<RigidActor*> actors;
     std::vector<Constraint*> constraints;
     std::vector<Constraint*> contactConstraints;
+    std::vector<ContactCache> contactCaches;
     Vector3 gravity;
     friend class PhysWorldDebugger;
 };
