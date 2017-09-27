@@ -30,7 +30,7 @@ struct ContactCache
         , nextIdx(0)
         , numContacts(0)
         , clearCount(0)
-        , timeToDropContact(1)
+        , timeToDropContact(10)
     {
     }
 
@@ -46,7 +46,7 @@ struct ContactCache
 
     int getOldestIdx() const
     {
-        return (nextIdx - numContacts) % numContactsPossible();
+        return ((nextIdx - numContacts) + numContactsPossible()) % numContactsPossible();
     }
 
     bool hasContacts() const
@@ -242,7 +242,7 @@ public:
                 fric1->minImpulse = -gravMass;
                 fric1->maxImpulse = gravMass;
                 fric1->baumgarte = 0.0f;
-                //contactConstraints.push_back(fric1);
+                contactConstraints.push_back(fric1);
 
                 Constraint* fric2 = new Constraint(bodyA, localA, bodyB, localB);
                 fric2->distance = 2.f;
@@ -251,7 +251,7 @@ public:
                 fric2->minImpulse = -gravMass;
                 fric2->maxImpulse = gravMass;
                 fric2->baumgarte = 0.0f;
-                //contactConstraints.push_back(fric2);
+                contactConstraints.push_back(fric2);
             }
         }
 
