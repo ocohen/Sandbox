@@ -21,17 +21,17 @@ struct ContactCache
     Transform contactsA[4];
     Transform contactsB[4];
     Vector3 normals[4]; //TODO: this needs to be local to A
-    int nextIdx;
-    int numContacts;
+    int contactCountdown[4];
 
     ContactCache(RigidBody* inA, RigidBody* inB)
         : bodyA(inA)
         , bodyB(inB)
-        , nextIdx(0)
-        , numContacts(0)
-        , clearCount(0)
-        , timeToDropContact(10)
+        , timeToDropContact(2)
     {
+        for(int& x : contactCountdown)
+        {
+            x = 0;
+        }
     }
 
     bool areWithinThreshold(const Transform& x, const Transform& y)
@@ -44,74 +44,76 @@ struct ContactCache
         return sizeof(contactsA) / sizeof(contactsA[0]);
     }
 
-    int getOldestIdx() const
+    int getNextIndex() const
     {
-        return ((nextIdx - numContacts) + numContactsPossible()) % numContactsPossible();
-    }
-
-    bool hasContacts() const
-    {
-        return numContacts > 0;
+        int retIdx = 0;
+        int minCount = INT_MAX;
+        for(int i=0; i< numContactsPossible(); ++i)
+        {
+            if(contactCountdown[i] < minCount)
+            {
+                minCount = contactCountdown[i];
+                retIdx = i;
+            }
+        }
+        
+        return retIdx;
     }
 
     void addContactPair(const Transform& localAPt, const Transform& localBPt, const Vector3& normal)
     {
-        //TODO: this doesn't properly handle updating oldest, also doesn't handle local normal
+        //TODO: doesn't handle local normal
         //first check if it's a new point
-        for(int i=0; i<numContacts; ++i)
+        for(int i=0; i<numContactsPossible(); ++i)
         {
-            const bool aMatches = areWithinThreshold(localAPt, contactsA[i]);
-            const bool bMatches = areWithinThreshold(localBPt, contactsB[i]);
+            if(contactCountdown[i] > 0)
+            {
+                const bool aMatches = areWithinThreshold(localAPt, contactsA[i]);
+                const bool bMatches = areWithinThreshold(localBPt, contactsB[i]);
 
-            if(aMatches && bMatches)
-            {
-                return;
-            }
-            else if(aMatches)
-            {
-                contactsA[i] = localAPt;
-                contactsB[i] = localBPt;
-                return;
-            }
-            else if(bMatches)
-            {
-                contactsA[i] = localAPt;
-                contactsB[i] = localBPt;
-                return;
+                if (aMatches && bMatches)
+                {
+                    contactCountdown[i] = timeToDropContact;
+                    return;
+                }
+                else if (aMatches)
+                {
+                    contactsA[i] = localAPt;
+                    contactsB[i] = localBPt;
+                    contactCountdown[i] = timeToDropContact;
+                    return;
+                }
+                else if (bMatches)
+                {
+                    contactsA[i] = localAPt;
+                    contactsB[i] = localBPt;
+                    contactCountdown[i] = timeToDropContact;
+                    return;
+                }
             }
         }
+
+        int nextIdx = getNextIndex();
 
         //actually a new contact point
         contactsA[nextIdx] = localAPt;
         contactsB[nextIdx] = localBPt;
         normals[nextIdx] = normal;
-        nextIdx = (nextIdx + 1) % numContactsPossible();
-        if(numContacts < 4)
-        {
-            ++numContacts;
-        }       
-    }
-
-    void removeOldestContact()
-    {
-        if(numContacts > 0)
-        {
-            --numContacts;
-        }
+        contactCountdown[nextIdx] = timeToDropContact;
     }
 
     void tickCache()
     {
-        ++clearCount;
-        if(clearCount >= timeToDropContact)
+        for(int i=0; i< numContactsPossible(); ++i)
         {
-            removeOldestContact();
-            clearCount = 0;
+            if(contactCountdown[i] > 0)
+            {
+                --contactCountdown[i];
+            }
         }
     }
 
 private:
-    int clearCount;
     int timeToDropContact;
 };
 
@@ -214,9 +216,13 @@ public:
             RigidBody* bodyA = cache.bodyA;
             RigidBody* bodyB = cache.bodyB;
 
-            for(int i=0; i<cache.numContacts; ++i)
+            for(int pairIdx=0; pairIdx<cache.numContactsPossible(); ++pairIdx)
             {
-                int pairIdx = (cache.getOldestIdx() + i) % cache.numContactsPossible();
+                if(cache.contactCountdown[pairIdx] == 0)
+                {
+                    continue;
+                }
+
                 const Transform& localA = cache.contactsA[pairIdx];
                 const Transform& localB = cache.contactsB[pairIdx];
                 const Vector3& normal = cache.normals[pairIdx]; //TODO: this is not localized properly
