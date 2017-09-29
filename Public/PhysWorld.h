@@ -20,13 +20,13 @@ struct ContactCache
 
     Transform contactsA[4];
     Transform contactsB[4];
-    Vector3 normals[4]; //TODO: this needs to be local to A
+    Vector3 localANormal[4]; //TODO: this needs to be local to A
     int contactCountdown[4];
 
     ContactCache(RigidBody* inA, RigidBody* inB)
         : bodyA(inA)
         , bodyB(inB)
-        , timeToDropContact(2)
+        , timeToDropContact(3)
     {
         for(int& x : contactCountdown)
         {
@@ -60,7 +60,7 @@ struct ContactCache
         return retIdx;
     }
 
-    void addContactPair(const Transform& localAPt, const Transform& localBPt, const Vector3& normal)
+    void addContactPair(const Transform& localAPt, const Transform& localBPt, const Vector3& localNormal)
     {
         //TODO: doesn't handle local normal
         //first check if it's a new point
@@ -98,7 +98,7 @@ struct ContactCache
         //actually a new contact point
         contactsA[nextIdx] = localAPt;
         contactsB[nextIdx] = localBPt;
-        normals[nextIdx] = normal;
+        localANormal[nextIdx] = localNormal;
         contactCountdown[nextIdx] = timeToDropContact;
     }
 
@@ -195,7 +195,7 @@ public:
                                 useCache = &contactCaches.back();
                             }
 
-                            useCache->addContactPair(localA, localB, info.aToBNormal);
+                            useCache->addContactPair(localA, localB, localA.rotation.getInverse() * info.aToBNormal);
                         }
                     }
                 }
@@ -225,7 +225,7 @@ public:
 
                 const Transform& localA = cache.contactsA[pairIdx];
                 const Transform& localB = cache.contactsB[pairIdx];
-                const Vector3& normal = cache.normals[pairIdx]; //TODO: this is not localized properly
+                const Vector3 normal = localA.transformVector(cache.localANormal[pairIdx]);
 
                 Constraint* newConstraint = new Constraint(bodyA, localA, bodyB, localB);
                 newConstraint->distance = 2.f;
