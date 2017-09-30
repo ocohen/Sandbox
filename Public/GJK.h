@@ -576,4 +576,9 @@ bool gjkOverlapping(const ShapeUnion& a, const Transform& a2World, const ShapeUn
     return !gjkGetClosestPoints<false>(a, a2World, b, b2World, nullptr, margin, info);
 }
 
+void epa(const ShapeUnion& a, const Transform& a2World, const ShapeUnion& b, const Transform& b2World, const Vector3* gjkSimplex,  GJKInfo& gjkInfo)
+{
+
+}
+
 #endif
