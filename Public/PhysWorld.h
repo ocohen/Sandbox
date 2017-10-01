@@ -363,6 +363,7 @@ public:
     Logger* logger;
 
     const std::vector<Constraint*>& getContactConstraints(){ return contactConstraints; }
+    const std::vector<ContactCache>& getContactCache() const { return contactCaches; }
 
 private:
 	std::vector<RigidActor*> actors;

@@ -163,6 +163,20 @@ int main(int argc, char *argv[])
                     break;
                 }
             }
+
+            const std::vector<ContactCache>& contactCache = physWorld.getContactCache();
+            for(const ContactCache& cache : contactCache)
+            {
+                for(int i=0; i<cache.numContactsPossible(); ++i)
+                {
+                    if(cache.contactCountdown[i] > 0)
+                    {
+                        const Vector3 start = cache.bodyA->bodyToWorld.transformPoint(cache.contactsA[i].translation);
+                        renderer.drawPoint(start, &green, 3.f);
+                    }
+                }
+                
+            }
         }
         else
         {
