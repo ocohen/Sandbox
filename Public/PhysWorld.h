@@ -18,15 +18,15 @@ struct ContactCache
     RigidBody* bodyA;
     RigidBody* bodyB;
 
-    Transform contactsA[4];
-    Transform contactsB[4];
-    Vector3 localANormal[4]; //TODO: this needs to be local to A
-    int contactCountdown[4];
+    Transform contactsA[40];
+    Transform contactsB[40];
+    Vector3 localANormal[40]; //TODO: this needs to be local to A
+    int contactCountdown[40];
 
     ContactCache(RigidBody* inA, RigidBody* inB)
         : bodyA(inA)
         , bodyB(inB)
-        , timeToDropContact(3)
+        , timeToDropContact(10)
     {
         for(int& x : contactCountdown)
         {

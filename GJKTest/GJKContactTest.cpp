@@ -74,6 +74,7 @@ int main(int argc, char *argv[])
 
     Vector3 green(0.f, 1.f, 0.f);
     Vector3 red(1.f, 0.f, 0.f);
+    Vector3 blue(0.f, 0.f, 1.f);
 
     bool debugEnabled = false;
     int debugUpToFrame = 0;
@@ -163,20 +164,6 @@ int main(int argc, char *argv[])
                     break;
                 }
             }
-
-            const std::vector<ContactCache>& contactCache = physWorld.getContactCache();
-            for(const ContactCache& cache : contactCache)
-            {
-                for(int i=0; i<cache.numContactsPossible(); ++i)
-                {
-                    if(cache.contactCountdown[i] > 0)
-                    {
-                        const Vector3 start = cache.bodyA->bodyToWorld.transformPoint(cache.contactsA[i].translation);
-                        renderer.drawPoint(start, &green, 3.f);
-                    }
-                }
-                
-            }
         }
         else
         {
@@ -199,7 +186,7 @@ int main(int argc, char *argv[])
         debugInfo.numIterations = 10000;
         debugInfo.hullResolution = 16;
         int debugI = debugTarget % 2;
-        int debugJ = 1 - debugI;
+        int debugJ = 2;
 
         for(int i=0; i< shapes.size(); ++i)
         {
@@ -230,6 +217,20 @@ int main(int argc, char *argv[])
             }
         }
 
+        const std::vector<ContactCache>& contactCache = physWorld.getContactCache();
+        for (const ContactCache& cache : contactCache)
+        {
+            for (int i = 0; i < cache.numContactsPossible(); ++i)
+            {
+                if (cache.contactCountdown[i] > 0)
+                {
+                    const Vector3 start = cache.bodyA->bodyToWorld.transformPoint(cache.contactsA[i].translation);
+                    const Vector3 normal = cache.bodyA->bodyToWorld.transformVector(cache.localANormal[i]);
+                    renderer.drawLine(start, start + 10.f * normal, &blue, 2.f);
+                }
+            }
+
+        }
         
         if(debugEnabled)
         {
